@@ -1,0 +1,1 @@
+# Local GraphRAG — Core Module

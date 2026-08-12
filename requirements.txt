@@ -1,0 +1,15 @@
+openai
+langchain-chroma
+langchain-core
+langchain-text-splitters
+langgraph
+chromadb
+fastapi
+uvicorn[standard]
+streamlit
+pypdf
+python-docx
+python-multipart
+requests
+pydantic
+numpy
