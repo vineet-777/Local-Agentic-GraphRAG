@@ -1,0 +1,10 @@
+additional features for RAG project
+- signin/signup ( with robust authorization and authentication)
+- implement Noe4j
+- implement dual GraphDB parsing (without conflicts or merging GDB)
+- Logs for the user sessions (with cerry on top concurrent users count)
+- implement Admin panel (server side)
+- user credential encryption
+- share conversations
+- chat context 
+- multi modal chat
