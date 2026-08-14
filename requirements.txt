@@ -13,4 +13,3 @@ python-multipart
 requests
 pydantic
 numpy
-hi I'm srikanth
