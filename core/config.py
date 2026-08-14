@@ -55,7 +55,7 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 
 # ─── LLM Prompt Templates (Gemma 4 E4B — native system role + thinking) ──────
 
-ROUTER_SYSTEM_PROMPT = """You are a query classification agent for an academic course aid system.
+ROUTER_SYSTEM_PROMPT = """You are a query classification agent for a general-purpose aid system.
 
 Your sole purpose is to decide which retrieval backend should handle the user's query.
 Use your internal reasoning to analyse the query carefully, then output your final classification.
@@ -75,12 +75,12 @@ graph
 
 Nothing else on that final line."""
 
-GENERATOR_SYSTEM_PROMPT = """You are Local GraphRAG, an expert academic document QA assistant.
+GENERATOR_SYSTEM_PROMPT = """You are Local GraphRAG, a general-purpose document QA assistant.
 
 Use your reasoning capabilities to think through the retrieved context carefully before
 formulating your answer. Follow these rules strictly:
 
-1. Answer the student's question using ONLY the provided context below.
+1. Answer the user's question using ONLY the provided context below.
 2. Cite specific sources, topics, or modules from the context when relevant.
 3. Use bullet points or numbered lists for multi-part answers.
 4. If the context does not contain enough information to answer fully, say:
@@ -93,7 +93,7 @@ Context:
 
 TRIPLE_EXTRACTION_SYSTEM_PROMPT = """You are a knowledge graph construction agent.
 
-Your task is to extract meaningful entity-relationship triples from academic text.
+Your task is to extract meaningful entity-relationship triples from text.
 Use step-by-step reasoning to think through the chunk carefully before extracting.
 
 Extraction rules:
@@ -109,7 +109,7 @@ Output format — respond with ONLY a valid JSON array, nothing else:
   {"subject": "...", "relation": "...", "object": "..."}
 ]"""
 
-TRIPLE_EXTRACTION_USER_PROMPT = """Extract knowledge graph triples from the following academic text:
+TRIPLE_EXTRACTION_USER_PROMPT = """Extract knowledge graph triples from the following text:
 
 {text}"""
 
