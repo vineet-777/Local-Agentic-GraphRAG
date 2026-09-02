@@ -131,7 +131,12 @@ def embed_chunks(chunks: list[Document]) -> int:
     """
     Embed text chunks into ChromaDB. Additive — never overwrites existing data.
     Uses content-hash-based IDs for automatic deduplication.
-    
+
+    Handles two deduplication layers:
+    1. Cross-batch: skips chunks already persisted in ChromaDB
+    2. Within-batch: skips duplicate chunks from the same ingestion run
+       (identical content produces identical chunk_ids)
+
     Returns:
         Number of new chunks added.
     """
@@ -153,8 +158,15 @@ def embed_chunks(chunks: list[Document]) -> int:
     existing = vectorstore.get(ids=ids)
     existing_ids = set(existing.get("ids", []))
 
-    new_chunks = [c for c, cid in zip(chunks, ids) if cid not in existing_ids]
-    new_ids = [cid for cid in ids if cid not in existing_ids]
+    # Filter to new chunks AND deduplicate within the batch
+    seen = set()
+    new_chunks = []
+    new_ids = []
+    for c, cid in zip(chunks, ids):
+        if cid not in existing_ids and cid not in seen:
+            seen.add(cid)
+            new_chunks.append(c)
+            new_ids.append(cid)
 
     if new_chunks:
         vectorstore.add_documents(documents=new_chunks, ids=new_ids)

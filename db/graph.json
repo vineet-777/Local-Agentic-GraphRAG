@@ -1,283 +1,459 @@
 {
   "nodes": [
     {
+      "id": "aa59d67c21",
+      "label": "Metrics",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f99d3f92c0",
+      "label": "evaluating project's success",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7088c8b1e2",
+      "label": "evaluating project's performance",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "858eb4c7fa",
+      "label": "Critical Metrics",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a5e200bf22",
+      "label": "source material",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
       "id": "c62ab4fd3b",
       "label": "Local GraphRAG",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "0849821191",
-      "label": "Dual-Retrieval Augmented Generation System",
+      "id": "098ee03693",
+      "label": "multi-agent question-answering system",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "fc242fd5ed",
-      "label": "Academic Course Aid",
+      "id": "72ec4ee685",
+      "label": "vector-based retrieval and knowledge-graph traversal",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "17d1dc9ce6",
-      "label": "GraphRAG architecture",
+      "id": "fbf0094a02",
+      "label": "document understanding",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "3ec8669525",
-      "label": "Dual Retrieval and Generation techniques",
+      "id": "4e32fd27be",
+      "label": "PDF/DOCX files",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "aff519a002",
-      "label": "Primary objective",
+      "id": "1d5ce25712",
+      "label": "chunking and embedding into ChromaDB",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "df101a9651",
-      "label": "Multi-agent RAG system",
+      "id": "ddb89d8b3f",
+      "label": "LLM-based triple extraction",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "8d72498b4a",
-      "label": "Vector Database retrieval",
+      "id": "1c30e53928",
+      "label": "documents into a knowledge graph",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "cb808f5bd4",
-      "label": "Knowledge Graph intelligence",
+      "id": "c469db9a6b",
+      "label": "LangGraph state machine",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "e04cc266b6",
-      "label": "Connection-aware answers",
+      "id": "3351db5a9e",
+      "label": "optimal retrieval path",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "9d97c3fc2c",
-      "label": "Highly accurate answers",
+      "id": "3f4c774a1a",
+      "label": "factual queries",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "835be98332",
-      "label": "System functionality",
+      "id": "e939d7bc21",
+      "label": "vector similarity search",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "98bd2b1574",
-      "label": "Transparency via reasoning traces",
+      "id": "5bb10417dc",
+      "label": "relationship-based questions",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "99f6f4be09",
-      "label": "Pipeline",
+      "id": "6093de540e",
+      "label": "graph traversal",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "bf7189d19d",
-      "label": "Ingestion",
+      "id": "4be7acc1b1",
+      "label": "Fully-local RAG pipeline",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "f41c6f0db9",
-      "label": "Querying",
+      "id": "4da63eff48",
+      "label": "zero cloud dependency",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "2fe282eb6f",
-      "label": "Local Processing",
+      "id": "0fbd6fcc37",
+      "label": "no API keys",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "b742a96c89",
-      "label": "keeping data on user's machine",
+      "id": "0ed89f0143",
+      "label": "Dual retrieval architecture",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "f2ad804b06",
-      "label": "Dual-Retrieval Routing",
+      "id": "9ea3e1b6f7",
+      "label": "Vector DB",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "c4f5abd6bb",
-      "label": "vector search and graph logic",
+      "id": "eb35e43aff",
+      "label": "Knowledge Graph",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "9dc66e1771",
-      "label": "Reasoning Trace UI",
+      "id": "39e46d8729",
+      "label": "LLM-based routing",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "f8c9141f2b",
-      "label": "AI's internal thought process",
+      "id": "55531bc015",
+      "label": "System feature",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "4f308eb18e",
-      "label": "Dynamic Knowledge Ingestion",
+      "id": "627e1dcd08",
+      "label": "Transparent reasoning trace",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "d8571a0059",
-      "label": "existing knowledge base with new documents",
+      "id": "6a2ebfd21b",
+      "label": "Dynamic ingestion",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "da7f22d59e",
-      "label": "Persistent Multi-Agent Storage",
+      "id": "3d2db5f21a",
+      "label": "additive document processing",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "d2c89db448",
-      "label": "app restarts",
+      "id": "beebabb62c",
+      "label": "End-to-end system",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "a8af619a70",
-      "label": "Real-time Progress Tracking",
+      "id": "1bd143d8ba",
+      "label": "FastAPI backend",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
-      }
-    },
-    {
-      "id": "0612942758",
-      "label": "long-running document ingestion tasks",
-      "type": "concept",
-      "properties": {
-        "source": "Local GraphRAG.docx"
-      }
-    },
-    {
-      "id": "d39d5d8b06",
-      "label": "System Architecture",
-      "type": "concept",
-      "properties": {
-        "source": "Local GraphRAG.docx"
-      }
-    },
-    {
-      "id": "96807db148",
-      "label": "multi-tiered architecture",
-      "type": "concept",
-      "properties": {
-        "source": "Local GraphRAG.docx"
-      }
-    },
-    {
-      "id": "462100e763",
-      "label": "Client Layer",
-      "type": "concept",
-      "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
       "id": "4aeea72b7c",
-      "label": "Streamlit Frontend",
+      "label": "Streamlit frontend",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "93b19feac2",
-      "label": "API Layer",
+      "id": "46f86faa6b",
+      "label": "Project",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "0e8b15df2c",
-      "label": "FastAPI server",
+      "id": "ff483d1ff5",
+      "label": "Identity",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "c0429defd0",
-      "label": "Orchestration Layer",
+      "id": "d61570b050",
+      "label": "Existing RAG systems",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "9ea402e3c3",
+      "label": "reliance on cloud-based LLM APIs",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "381376aa49",
+      "label": "Cloud-based LLM APIs reliance",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a5d30093a9",
+      "label": "privacy and data-sovereignty issues",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e216657cc6",
+      "label": "single vector-similarity retrieval path",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "cd6a8d07cb",
+      "label": "inter-concept relationships in academic material",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "aff41d85a9",
+      "label": "lack of transparency in reasoning process",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "9c80b8f2a7",
+      "label": "fully-local, privacy-preserving multi-agent system",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f0ea765b7e",
+      "label": "vector retrieval with knowledge-graph traversal",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "710f4b73ab",
+      "label": "Standard RAG systems",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7aea036f64",
+      "label": "relational or comparative queries",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "19ed0d75fd",
+      "label": "Vector similarity retrieval",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f9cedfb02c",
+      "label": "limitations of Standard RAG systems",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4c70c6e21c",
+      "label": "knowledge graph retrieval path",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2a525b85d5",
+      "label": "extracted triples",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "6d867a4987",
+      "label": "intelligent router",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4f79664465",
+      "label": "RAG system",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "bac3e4b45e",
+      "label": "fully-local operation without external API calls",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "56955cdd04",
+      "label": "dual-retrieval architecture",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0a14499e17",
+      "label": "vector similarity search (ChromaDB)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4ba93f1211",
+      "label": "knowledge graph traversal (JSON-based graph)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "bb6f1feb9f",
+      "label": "intelligent query routing agent",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
@@ -285,39 +461,471 @@
       "label": "LangGraph",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "daddffb934",
-      "label": "state machine",
+      "id": "77b736f9a2",
+      "label": "query routing agent",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "d8018e4f19",
-      "label": "Storage Layer",
+      "id": "189430f1be",
+      "label": "classifies user queries and directs them to optimal retrieval path",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "f0b12b5f0e",
-      "label": "ChromaDB directory (vectors)",
+      "id": "ee393f40a2",
+      "label": "knowledge graph construction pipeline",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "7cca888882",
-      "label": "Inference Layer",
+      "id": "ad6836fa71",
+      "label": "local LLM",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4cfd90b58a",
+      "label": "entity-relationship triples from document chunks",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "139474c545",
+      "label": "system implementation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "061655cd98",
+      "label": "system optimization",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0b14744725",
+      "label": "commodity hardware (4GB VRAM GPU)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b030701d1e",
+      "label": "System Scope",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e3868d1eb4",
+      "label": "PDF and DOCX document ingestion with text extraction",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "04a91858c5",
+      "label": "Automatic text chunking with overlap for context preservation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8fa1d7b61e",
+      "label": "Vector embedding and storage using ChromaDB",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d99eaeb4a0",
+      "label": "LLM-based knowledge graph construction from document chunks",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7074973031",
+      "label": "Intelligent query classification (vector vs. graph retrieval)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f1c4f43bd5",
+      "label": "Grounded answer generation with source attribution",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d8595af350",
+      "label": "Limitation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "af7b525f8c",
+      "label": "Image, table, or scanned document (OCR) input formats",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c68735ec61",
+      "label": "Knowledge Graph Schema",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "af118c0d40",
+      "label": "flat JSON structure",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b907b3481a",
+      "label": "Model constraints",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "313da6a896",
+      "label": "4GB VRAM (Q4_K_M quantization)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d953aecde0",
+      "label": "Larger models",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d66636b253",
+      "label": "quality",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "83e74e7f5f",
+      "label": "hardware limits",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "af22d1e446",
+      "label": "System capability",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "edc4e707b9",
+      "label": "conversational memory",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8df4d27574",
+      "label": "Query processing",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e258077755",
+      "label": "independent",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "9ca13e56fb",
+      "label": "Language optimization",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "beec69257a",
+      "label": "English-language documents",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "6feb75706f",
+      "label": "Retrieval-Augmented Generation (RAG)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f4620c774a",
+      "label": "pre-trained retriever and generative model",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "985d8565d9",
+      "label": "Retriever (in RAG)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c0d7cc46d1",
+      "label": "external knowledge source",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2150938e0d",
+      "label": "Generator (in RAG)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3b6a84490b",
+      "label": "retrieved passages",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7542dc7e91",
+      "label": "RAG",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0054e35035",
+      "label": "hallucination in standalone LLMs",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "22b52f6be8",
+      "label": "single retrieval path (vector similarity)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0a51fd2d37",
+      "label": "dual-path architecture",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3afcd8145e",
+      "label": "Standard RAG",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1bafb06bb0",
+      "label": "GraphRAG",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8fe406730e",
+      "label": "knowledge graphs built from source documents",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ae61c9858c",
+      "label": "community-level summaries",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b096de96ae",
+      "label": "relationship-aware retrieval",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e0137199c1",
+      "label": "understanding connections between concepts",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "17303defa8",
+      "label": "Microsoft’s GraphRAG (cloud LLM access)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "27b4aeca2b",
+      "label": "framework for building stateful, multi-step agent workflows",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "421b82df57",
+      "label": "directed graphs",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7b926546a8",
+      "label": "conditional branching",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4fa5be25bd",
+      "label": "ChromaDB",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8a7f12c49a",
+      "label": "embeddings-first vector database",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "474a95b296",
+      "label": "persistent storage",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "285c6d50a9",
+      "label": "similarity search with relevance scoring",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0d55f918c8",
+      "label": "core query pipeline",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0f97184aea",
+      "label": "LangChain's document/retriever abstractions",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ba0a05f597",
+      "label": "document chunk embeddings",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2f9c2d7613",
+      "label": "similarity-based retrieval",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
@@ -325,355 +933,3054 @@
       "label": "LM Studio",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "3d78ec5456",
-      "label": "document uploads and status polling",
+      "id": "1543bdacd4",
+      "label": "open-source LLMs locally",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "f6313ac51d",
-      "label": "Syllabus materials",
+      "id": "c4f8b11233",
+      "label": "OpenAI-compatible API endpoint",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "0037e8560e",
-      "label": "Prerequisite topics",
+      "id": "fdf20f94a5",
+      "label": "GGUF format",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "75b3ca026b",
-      "label": "Legal & Medical Analysis",
+      "id": "60bd620006",
+      "label": "consumer hardware",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "480cec22ee",
-      "label": "Private client data",
+      "id": "7be59f07be",
+      "label": "query router",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "1232123bcf",
-      "label": "Cases and symptoms",
+      "id": "5ff38ec319",
+      "label": "answer synthesiser",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "3bedcd3bd8",
-      "label": "Corporate Documentation",
+      "id": "d39d5d8b06",
+      "label": "System Architecture",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "1f3e438846",
-      "label": "Proprietary technical manuals",
+      "id": "0125b83cf0",
+      "label": "High-Level Architecture",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "ccb6f41de2",
-      "label": "Enterprise teams",
+      "id": "22809f26d0",
+      "label": "High-Level Architecture Diagram",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "feeaf2d899",
-      "label": "IP leakage",
+      "id": "047e10551a",
+      "label": "Three-Layer Architecture",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "548f088b3f",
-      "label": "graph.json representation",
+      "id": "efe79c3211",
+      "label": "Architecture",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "5007d7f37a",
-      "label": "Specialized graph database (Neo4j or Memgraph)",
+      "id": "86730e93e2",
+      "label": "System Process",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "71d925f159",
-      "label": "Ingestion engine",
+      "id": "f619daa0a4",
+      "label": "Ingestion Workflow",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "9789fe4af2",
-      "label": "Multimodal data types (charts, diagrams, images)",
+      "id": "4270bfced1",
+      "label": "core/",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "8031c37727",
-      "label": "Graph retriever",
+      "id": "fdf313ed23",
+      "label": "config.py",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "b3f3e75bda",
-      "label": "Multi-hop reasoning for complex questions",
+      "id": "0ddbed5361",
+      "label": "ingest.py",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "f951720dfc",
-      "label": "System stack deployment",
+      "id": "1d7220f9a5",
+      "label": "graph_builder.py",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "5fa2002463",
-      "label": "Dockerization",
+      "id": "d5ba88c3f0",
+      "label": "retrievers.py",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "01f2e4afa9",
-      "label": "Cloud Deployment",
+      "id": "ae7891bac0",
+      "label": "engine.py",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
       }
     },
     {
-      "id": "4650b90ce5",
-      "label": "Secure execution in VPC or cloud environment",
+      "id": "0188a3e6da",
+      "label": "api/",
       "type": "concept",
       "properties": {
-        "source": "Local GraphRAG.docx"
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d355af6697",
+      "label": "server.py",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1788f8309b",
+      "label": "ui/",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3f41e54689",
+      "label": "app.py",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "61216fdf56",
+      "label": "Centralized configuration & health checks",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a1053b84a1",
+      "label": "Knowledge graph construction",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7d5c009e4e",
+      "label": "ui",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8d777f385d",
+      "label": "data",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3e57f6a936",
+      "label": "Raw files",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d77d5e503a",
+      "label": "db",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2e438bd5ec",
+      "label": "Persistent data stores",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "63fa20b82f",
+      "label": "chroma.sqlite3",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a1bdc993ce",
+      "label": "graph.json",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "5128f35c9b",
+      "label": "uploads",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "14489dbeb0",
+      "label": "Temporary upload staging",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b4ef698db8",
+      "label": "requirements.txt",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e45e882e8c",
+      "label": "Python dependencies",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2ba9c027f5",
+      "label": "15 packages",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0730bb7c2e",
+      "label": "README.md",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a1276ade99",
+      "label": "Project documentation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "718779752b",
+      "label": "LICENSE",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "45b0c8e7db",
+      "label": "MIT License",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8366e8a41b",
+      "label": "PROJECT_DOCUMENTATION.md",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f04f45ed15",
+      "label": "Technical documentation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "75ad31bb21",
+      "label": "vtu_project_report.md",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f50a26a1c5",
+      "label": "VTU-formatted project report",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "53bdc59ba6",
+      "label": "FuturePlans.txt",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0918ff42cf",
+      "label": "Planned features",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "fcd31a4939",
+      "label": "optimising-graphbuilder-pipeline.md",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "6ebc531a3e",
+      "label": "Pipeline optimization notes",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ca15fd43df",
+      "label": "nodes",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ecd027c0cb",
+      "label": "edges",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "36c4536996",
+      "label": "Node",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "36cd38f49b",
+      "label": "source",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "09039bd162",
+      "label": "Edge",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "39405cf152",
+      "label": "prerequisite_of",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "679cf970ec",
+      "label": "Relation types used",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "93c2179248",
+      "label": "is_a",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d985fc1df4",
+      "label": "part_of",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b00d33e8f9",
+      "label": "Data Schemas",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e6749b1493",
+      "label": "ChromaDB Collection",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e0b8e48d69",
+      "label": "Figure 4",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4468034ea3",
+      "label": "Entity-Relationship Diagram",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8104f6ee32",
+      "label": "GET /api/health",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "91e60066a5",
+      "label": "LM Studio and database",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8491f5ef24",
+      "label": "API endpoint",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "af58037963",
+      "label": "200 (healthy)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "133aa2e781",
+      "label": "Response status",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "304c465eb4",
+      "label": "LM Studio connectivity",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1aefbcd477",
+      "label": "No body or parameters",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f5a3cbfa92",
+      "label": "POST /api/upload",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e8b4ce3186",
+      "label": "Upload PDF/DOCX files for background ingestion",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7e9a545502",
+      "label": "multipart/form-data with field files",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7d9ebcc3b0",
+      "label": "Allowed extensions: .pdf, .docx, .doc",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "046ff2b09f",
+      "label": "processing job is already running (409)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f70c36a169",
+      "label": "LM Studio is not running (503)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "268b91c119",
+      "label": "GET /api/upload-status",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c6740cb211",
+      "label": "Poll background file processing progress",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "71ce2394ef",
+      "label": "Streamlit UI",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0daa440d17",
+      "label": "is_processing, stage, progress, current_file, total_files, processed_files",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a01419ad62",
+      "label": "Query classified as 'vector' path",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7b1a92e4ed",
+      "label": "System/Process",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d1fce273d6",
+      "label": "retrieve_vector",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "581185d60f",
+      "label": "generate_answer",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ac904cf42f",
+      "label": "google/gemma-4-e4b",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "609d0cbee8",
+      "label": "Root info endpoint (GET /)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "5b9fe3ad7e",
+      "label": "Returns API version and available endpoint paths",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "bc7e8d8add",
+      "label": "Local GraphRAG API",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0eb3c700e8",
+      "label": "v2.0",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "630e5def08",
+      "label": "API endpoints",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "47a546f420",
+      "label": "health (GET /api/health)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "90a1afd85b",
+      "label": "classify_query",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1b1cc7f086",
+      "label": "query",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1e7ccf7cc2",
+      "label": "ROUTER_SYSTEM_PROMPT",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b63ab72a4e",
+      "label": "client.chat.completions.create",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "60e662a95b",
+      "label": "route (string)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f7d4736d15",
+      "label": "reasoning_trace",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2fb85bd1fe",
+      "label": "VectorRetriever()",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7fe1ef03f5",
+      "label": "VectorRetriever",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f152b93202",
+      "label": "VectorRetriever.query()",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "71aceae722",
+      "label": "similarity_search_with_relevance_scores",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d97682483a",
+      "label": "context (formatted string with chunk sources/pages/scores)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e5259c26b0",
+      "label": "GraphRetriever",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "50014fd06d",
+      "label": "keyword matching",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "7a9e0d0b83",
+      "label": "GraphRetriever.query()",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e443c18735",
+      "label": "BFS traversal (max 2 hops)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "07169b5077",
+      "label": "Node: generate_answer",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "5c18ef7277",
+      "label": "context",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d1fc5ed220",
+      "label": "Gemma 4",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2c5af96a6a",
+      "label": "Router Agent",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "645893c098",
+      "label": "query classification agent",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "5956aae43b",
+      "label": "classification criteria (vector vs graph)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a9a03b9cf2",
+      "label": "reasoning before output",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "97576ed716",
+      "label": "Triple Extractor",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "63c987e957",
+      "label": "knowledge graph construction agent",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c0ded4b3ea",
+      "label": "extraction rules and valid relationship types",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b820db4f84",
+      "label": "step-by-step reasoning before extraction",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "dbf8d75027",
+      "label": "JSON array only",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f24eaaa575",
+      "label": "Answer Synthesiser (generate_answer)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1b26da3044",
+      "label": "System role",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c6051043f8",
+      "label": "Local GraphRAG, an expert academic document QA assistant",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4f2a07438e",
+      "label": "retrieved context directly in the system message",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4307ace02d",
+      "label": "context before answering",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0f99574a42",
+      "label": "context-only answers, cite sources, admit insufficient info",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "6076ec7580",
+      "label": "reasoning/thinking tokens before the final answer",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "9dfc30d31a",
+      "label": "Embedding Model",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "33c04304ee",
+      "label": "LM Studio Setup",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8c5eebfc32",
+      "label": "gemma-4-e4b model (Q4_K_M GGUF)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "dd888630c2",
+      "label": "nomic-embed-text-v1.5 model",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a4a8abf5af",
+      "label": "LM Studio Configuration",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "56a6b15c18",
+      "label": "Context Length to 4096",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "dcb218b469",
+      "label": "GPU Offload: All layers to GPU",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "29d40fcfc5",
+      "label": "Local Server Start",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "add5073d7d",
+      "label": "localhost:1234",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a53b1d4009",
+      "label": "Python Environment Setup",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "935d289da9",
+      "label": "Creating a virtual environment (.venv)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e124e7543d",
+      "label": "venv",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "630eef78d1",
+      "label": "virtual environment",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ed479ebacd",
+      "label": "pip install -r requirements.txt",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2dc9bca1a0",
+      "label": "Install dependencies",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4bbe64e597",
+      "label": "uvicorn api.server:app",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "87dcc0d367",
+      "label": "API Server on port 8000",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3d9ef9007b",
+      "label": "streamlit run ui/app.py",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "dacb64899b",
+      "label": "running on localhost:1234",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d5dea353e7",
+      "label": "API server",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "67ff32d40f",
+      "label": "8000",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "dcb6d985b4",
+      "label": "http://localhost:8501",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d775a7389a",
+      "label": "configurable values",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "fb1a687242",
+      "label": "core/config.py",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "79c2ce74ce",
+      "label": "single source of truth",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "094965daf8",
+      "label": "Configuration Reference",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "82d271511b",
+      "label": "Path Constants",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "5538812a96",
+      "label": "LM Studio Connection",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3ecec9d0c8",
+      "label": "Model Names",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1c1d97e90b",
+      "label": "Inference Settings",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "98bac38336",
+      "label": "Retrieval Settings",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "bd9e36bc99",
+      "label": "Current Knowledge Base State",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "23088b1e7f",
+      "label": "Graph Statistics",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ee62fe1de3",
+      "label": "Sample Nodes (from graph.json)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f2c6ab5b8c",
+      "label": "Sample Edges (from graph.json)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d6fa724e6c",
+      "label": "Relation Types Used in Graph",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1749650db3",
+      "label": "Known Limitations",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "47cb06083e",
+      "label": "Concept",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "bce796002e",
+      "label": "Future Enhancements",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ae2b1fca51",
+      "label": "Testing",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "157d9d2407",
+      "label": "Manual functional testing",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3426c8b35c",
+      "label": "Integrated validation logic",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0325a94098",
+      "label": "Codebase",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d299caded0",
+      "label": "Dedicated test files (est_.py, _test.py)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "54535a46b2",
+      "label": "Testing framework configurations (pytest.ini, ox.ini)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3b0891856b",
+      "label": "Runtime validation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c182d92a86",
+      "label": "Testing substitute",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d4ba0457ab",
+      "label": "Built-in Validation & Error Handling",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ffaa5debe4",
+      "label": "Extensive runtime validation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a6695caba4",
+      "label": "Local GraphRAG project",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "48da0eedf4",
+      "label": "fully-local, privacy-preserving Retrieval-Augmented Generation system with knowledge graph capabilities",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "640b01ff3c",
+      "label": "Privacy-first architecture",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f93ed3a0d6",
+      "label": "data remains local to the user's machine",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3b671c5fc9",
+      "label": "sensitive academic and institutional content",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e2e6634435",
+      "label": "Dual-retrieval innovation",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8de578be05",
+      "label": "vector similarity search (ChromaDB) and knowledge graph traversal",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "10d75c5601",
+      "label": "factual/definitional queries and relationship/comparison queries",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "59ff576d68",
+      "label": "Intelligent routing",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0f27070bea",
+      "label": "LangGraph-based state machine with LLM-driven query classification",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "556ea2f610",
+      "label": "automatically directs queries to the optimal retrieval path",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "123d6de02a",
+      "label": "Transparent reasoning",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "57bc305608",
+      "label": "full reasoning trace",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "93d82c8403",
+      "label": "classification step",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a8038e912a",
+      "label": "retrieval step",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "378972c828",
+      "label": "generation step",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "199d68e476",
+      "label": "educational use cases",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "cb2c10bbc4",
+      "label": "Practical engineering features",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "b58d739af6",
+      "label": "Dynamic incremental ingestion",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "975f046e86",
+      "label": "content-hash deduplication",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "21e7707452",
+      "label": "Resource efficiency",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "76bcfee7bc",
+      "label": "advanced RAG architectures feasibility",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e6185ac5d5",
+      "label": "Advanced RAG architectures",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c8ae0dfc99",
+      "label": "enterprise-grade hardware",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "4567b95c0f",
+      "label": "Lewis, P., et al.",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "93bdac7a32",
+      "label": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c21749041f",
+      "label": "NLP Task Enhancement Technique",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e6d9c8b009",
+      "label": "Neural Information Processing Systems (NeurIPS)",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a73619f519",
+      "label": "Edge, D., et al.",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "c9b06707b4",
+      "label": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d6eecfa01b",
+      "label": "Graph RAG Approach",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "083962f39a",
+      "label": "Summarization Technique",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "ea4e9cdc56",
+      "label": "Research Papers & Publications",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "5fa5bd2853",
+      "label": "Academic Research Work",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "49ff713ae5",
+      "label": "full system topology",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "45fae6c829",
+      "label": "Client, API, Core, Storage, and Inference layers",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0d894b215a",
+      "label": "Ingestion Sequence Diagram",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "14049b5251",
+      "label": "file upload through processing to storage",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "a6854b4beb",
+      "label": "Query State Diagram",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "8d0606adf3",
+      "label": "LangGraph state machine flow from query to answer",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "2f1f08094e",
+      "label": "Documents, Chunks, Embeddings, Triples, Nodes, and Edges",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f21d2885bd",
+      "label": "LangGraph State Machine Diagram",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "50f8602e5f",
+      "label": "node flow with processing annotations",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "455057e32b",
+      "label": "Sample Documents",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "322696d3ad",
+      "label": "PDF documents",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "f12409b712",
+      "label": "uploads/ directory",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "90fbaa8269",
+      "label": "File Inventory",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "9769700fa7",
+      "label": "Documentation Appendix",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "e98d2f001d",
+      "label": "Report",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "1bcdf5bdbc",
+      "label": "Source Files List",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "0ab7d8ab5b",
+      "label": "September 1, 2026",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "376062840a",
+      "label": "Information in this report",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3c78fa8b3e",
+      "label": "source code",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "3463cb0e06",
+      "label": "configuration files",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
+      }
+    },
+    {
+      "id": "d5b8ba2c56",
+      "label": "Local GraphRAG project repository at D:\\Projects\\GIT_Repos\\Major_project",
+      "type": "concept",
+      "properties": {
+        "source": "Local GraphRAG - Project Report.docx"
       }
     }
   ],
   "edges": [
     {
+      "source": "aa59d67c21",
+      "relation": "is_necessary_for",
+      "target": "f99d3f92c0"
+    },
+    {
+      "source": "aa59d67c21",
+      "relation": "is_necessary_for",
+      "target": "7088c8b1e2"
+    },
+    {
+      "source": "858eb4c7fa",
+      "relation": "are missing from",
+      "target": "a5e200bf22"
+    },
+    {
       "source": "c62ab4fd3b",
       "relation": "is_a",
-      "target": "0849821191"
+      "target": "098ee03693"
     },
     {
       "source": "c62ab4fd3b",
-      "relation": "designed_for",
-      "target": "fc242fd5ed"
+      "relation": "combines",
+      "target": "72ec4ee685"
     },
     {
       "source": "c62ab4fd3b",
-      "relation": "utilizes",
-      "target": "17d1dc9ce6"
+      "relation": "enhances",
+      "target": "fbf0094a02"
     },
     {
-      "source": "0849821191",
-      "relation": "combines",
-      "target": "3ec8669525"
+      "source": "4e32fd27be",
+      "relation": "are processed by",
+      "target": "1d5ce25712"
     },
     {
-      "source": "aff519a002",
-      "relation": "is_to_build",
-      "target": "df101a9651"
+      "source": "ddb89d8b3f",
+      "relation": "transforms",
+      "target": "1c30e53928"
     },
     {
-      "source": "df101a9651",
-      "relation": "combines",
-      "target": "8d72498b4a"
+      "source": "c469db9a6b",
+      "relation": "routes queries to",
+      "target": "3351db5a9e"
     },
     {
-      "source": "df101a9651",
-      "relation": "combines",
-      "target": "cb808f5bd4"
+      "source": "3f4c774a1a",
+      "relation": "use",
+      "target": "e939d7bc21"
     },
     {
-      "source": "df101a9651",
-      "relation": "provides_output",
-      "target": "e04cc266b6"
+      "source": "5bb10417dc",
+      "relation": "use",
+      "target": "6093de540e"
     },
     {
-      "source": "df101a9651",
-      "relation": "ensures",
-      "target": "9d97c3fc2c"
+      "source": "4be7acc1b1",
+      "relation": "has_feature",
+      "target": "4da63eff48"
     },
     {
-      "source": "835be98332",
-      "relation": "includes_feature",
-      "target": "98bd2b1574"
+      "source": "4be7acc1b1",
+      "relation": "requires",
+      "target": "0fbd6fcc37"
     },
     {
-      "source": "99f6f4be09",
-      "relation": "contains_phase",
-      "target": "bf7189d19d"
+      "source": "0ed89f0143",
+      "relation": "is_composed_of",
+      "target": "9ea3e1b6f7"
     },
     {
-      "source": "99f6f4be09",
-      "relation": "contains_phase",
-      "target": "f41c6f0db9"
+      "source": "0ed89f0143",
+      "relation": "is_composed_of",
+      "target": "eb35e43aff"
     },
     {
-      "source": "2fe282eb6f",
-      "relation": "ensures_privacy_by",
-      "target": "b742a96c89"
+      "source": "0ed89f0143",
+      "relation": "uses",
+      "target": "39e46d8729"
     },
     {
-      "source": "f2ad804b06",
-      "relation": "switches_between",
-      "target": "c4f5abd6bb"
+      "source": "55531bc015",
+      "relation": "provides",
+      "target": "627e1dcd08"
     },
     {
-      "source": "9dc66e1771",
-      "relation": "displays",
-      "target": "f8c9141f2b"
+      "source": "6a2ebfd21b",
+      "relation": "is_a",
+      "target": "3d2db5f21a"
     },
     {
-      "source": "4f308eb18e",
-      "relation": "allows_updating_of",
-      "target": "d8571a0059"
+      "source": "beebabb62c",
+      "relation": "uses_backend",
+      "target": "1bd143d8ba"
     },
     {
-      "source": "da7f22d59e",
-      "relation": "maintains_data_integrity_across",
-      "target": "d2c89db448"
-    },
-    {
-      "source": "a8af619a70",
-      "relation": "provides_feedback_for",
-      "target": "0612942758"
-    },
-    {
-      "source": "d39d5d8b06",
-      "relation": "has_structure",
-      "target": "96807db148"
-    },
-    {
-      "source": "462100e763",
-      "relation": "is_implemented_by",
+      "source": "beebabb62c",
+      "relation": "uses_frontend",
       "target": "4aeea72b7c"
     },
     {
-      "source": "93b19feac2",
-      "relation": "is_implemented_by",
-      "target": "0e8b15df2c"
+      "source": "46f86faa6b",
+      "relation": "has_component",
+      "target": "ff483d1ff5"
     },
     {
-      "source": "c0429defd0",
+      "source": "d61570b050",
+      "relation": "has_limitation",
+      "target": "9ea402e3c3"
+    },
+    {
+      "source": "381376aa49",
+      "relation": "causes_concern",
+      "target": "a5d30093a9"
+    },
+    {
+      "source": "d61570b050",
+      "relation": "has_limitation",
+      "target": "e216657cc6"
+    },
+    {
+      "source": "e216657cc6",
+      "relation": "fails_to_capture",
+      "target": "cd6a8d07cb"
+    },
+    {
+      "source": "d61570b050",
+      "relation": "has_limitation",
+      "target": "aff41d85a9"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "is_a",
+      "target": "9c80b8f2a7"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "combines",
+      "target": "f0ea765b7e"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "is_orchestrated_by",
+      "target": "c469db9a6b"
+    },
+    {
+      "source": "710f4b73ab",
+      "relation": "fails_for",
+      "target": "7aea036f64"
+    },
+    {
+      "source": "19ed0d75fd",
+      "relation": "is_used_by",
+      "target": "710f4b73ab"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "solves",
+      "target": "f9cedfb02c"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "adds",
+      "target": "4c70c6e21c"
+    },
+    {
+      "source": "eb35e43aff",
+      "relation": "is_built_from",
+      "target": "2a525b85d5"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "uses",
+      "target": "6d867a4987"
+    },
+    {
+      "source": "4f79664465",
+      "relation": "objective",
+      "target": "bac3e4b45e"
+    },
+    {
+      "source": "56955cdd04",
+      "relation": "combines",
+      "target": "0a14499e17"
+    },
+    {
+      "source": "56955cdd04",
+      "relation": "combines",
+      "target": "4ba93f1211"
+    },
+    {
+      "source": "bb6f1feb9f",
       "relation": "uses",
       "target": "cec81cc0d2"
     },
     {
+      "source": "77b736f9a2",
+      "relation": "function",
+      "target": "189430f1be"
+    },
+    {
+      "source": "ee393f40a2",
+      "relation": "uses",
+      "target": "ad6836fa71"
+    },
+    {
+      "source": "ee393f40a2",
+      "relation": "extracts",
+      "target": "4cfd90b58a"
+    },
+    {
+      "source": "139474c545",
+      "relation": "includes",
+      "target": "627e1dcd08"
+    },
+    {
+      "source": "061655cd98",
+      "relation": "targets",
+      "target": "0b14744725"
+    },
+    {
+      "source": "b030701d1e",
+      "relation": "includes",
+      "target": "e3868d1eb4"
+    },
+    {
+      "source": "b030701d1e",
+      "relation": "includes",
+      "target": "04a91858c5"
+    },
+    {
+      "source": "b030701d1e",
+      "relation": "uses",
+      "target": "8fa1d7b61e"
+    },
+    {
+      "source": "b030701d1e",
+      "relation": "includes",
+      "target": "d99eaeb4a0"
+    },
+    {
+      "source": "b030701d1e",
+      "relation": "includes",
+      "target": "7074973031"
+    },
+    {
+      "source": "b030701d1e",
+      "relation": "includes",
+      "target": "f1c4f43bd5"
+    },
+    {
+      "source": "d8595af350",
+      "relation": "excludes",
+      "target": "af7b525f8c"
+    },
+    {
+      "source": "c68735ec61",
+      "relation": "is_implemented_as",
+      "target": "af118c0d40"
+    },
+    {
+      "source": "b907b3481a",
+      "relation": "limits",
+      "target": "313da6a896"
+    },
+    {
+      "source": "d953aecde0",
+      "relation": "improve",
+      "target": "d66636b253"
+    },
+    {
+      "source": "d953aecde0",
+      "relation": "exceed",
+      "target": "83e74e7f5f"
+    },
+    {
+      "source": "af22d1e446",
+      "relation": "lacks",
+      "target": "edc4e707b9"
+    },
+    {
+      "source": "8df4d27574",
+      "relation": "is",
+      "target": "e258077755"
+    },
+    {
+      "source": "9ca13e56fb",
+      "relation": "targets",
+      "target": "beec69257a"
+    },
+    {
+      "source": "6feb75706f",
+      "relation": "combines",
+      "target": "f4620c774a"
+    },
+    {
+      "source": "985d8565d9",
+      "relation": "fetches passages from",
+      "target": "c0d7cc46d1"
+    },
+    {
+      "source": "2150938e0d",
+      "relation": "conditions on",
+      "target": "3b6a84490b"
+    },
+    {
+      "source": "7542dc7e91",
+      "relation": "addresses problem",
+      "target": "0054e35035"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "extends",
+      "target": "22b52f6be8"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "uses architecture",
+      "target": "0a51fd2d37"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "extends",
+      "target": "3afcd8145e"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "uses_architecture",
+      "target": "0a51fd2d37"
+    },
+    {
+      "source": "1bafb06bb0",
+      "relation": "leverages",
+      "target": "8fe406730e"
+    },
+    {
+      "source": "1bafb06bb0",
+      "relation": "provides",
+      "target": "ae61c9858c"
+    },
+    {
+      "source": "1bafb06bb0",
+      "relation": "enables_retrieval_type",
+      "target": "b096de96ae"
+    },
+    {
+      "source": "1bafb06bb0",
+      "relation": "requires_capability",
+      "target": "e0137199c1"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "addresses_limitation_of",
+      "target": "17303defa8"
+    },
+    {
       "source": "cec81cc0d2",
+      "relation": "is_a",
+      "target": "27b4aeca2b"
+    },
+    {
+      "source": "cec81cc0d2",
+      "relation": "provides",
+      "target": "421b82df57"
+    },
+    {
+      "source": "cec81cc0d2",
+      "relation": "supports",
+      "target": "7b926546a8"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "is_a",
+      "target": "8a7f12c49a"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "supports",
+      "target": "474a95b296"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "supports",
+      "target": "285c6d50a9"
+    },
+    {
+      "source": "c469db9a6b",
+      "relation": "is_used_for",
+      "target": "0d55f918c8"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "integrates_with",
+      "target": "0f97184aea"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "stores",
+      "target": "ba0a05f597"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "performs",
+      "target": "2f9c2d7613"
+    },
+    {
+      "source": "8701923fa6",
+      "relation": "enables running",
+      "target": "1543bdacd4"
+    },
+    {
+      "source": "8701923fa6",
+      "relation": "provides_interface",
+      "target": "c4f8b11233"
+    },
+    {
+      "source": "8701923fa6",
+      "relation": "supports_format",
+      "target": "fdf20f94a5"
+    },
+    {
+      "source": "fdf20f94a5",
+      "relation": "is_optimized_for",
+      "target": "60bd620006"
+    },
+    {
+      "source": "8701923fa6",
+      "relation": "serves_role",
+      "target": "7be59f07be"
+    },
+    {
+      "source": "8701923fa6",
+      "relation": "serves_role",
+      "target": "5ff38ec319"
+    },
+    {
+      "source": "d39d5d8b06",
+      "relation": "has_component",
+      "target": "0125b83cf0"
+    },
+    {
+      "source": "22809f26d0",
+      "relation": "illustrates",
+      "target": "047e10551a"
+    },
+    {
+      "source": "efe79c3211",
+      "relation": "has_component",
+      "target": "047e10551a"
+    },
+    {
+      "source": "86730e93e2",
+      "relation": "includes",
+      "target": "f619daa0a4"
+    },
+    {
+      "source": "4270bfced1",
+      "relation": "contains",
+      "target": "fdf313ed23"
+    },
+    {
+      "source": "4270bfced1",
+      "relation": "contains",
+      "target": "0ddbed5361"
+    },
+    {
+      "source": "4270bfced1",
+      "relation": "contains",
+      "target": "1d7220f9a5"
+    },
+    {
+      "source": "4270bfced1",
+      "relation": "contains",
+      "target": "d5ba88c3f0"
+    },
+    {
+      "source": "4270bfced1",
+      "relation": "contains",
+      "target": "ae7891bac0"
+    },
+    {
+      "source": "0188a3e6da",
+      "relation": "contains",
+      "target": "d355af6697"
+    },
+    {
+      "source": "1788f8309b",
+      "relation": "contains",
+      "target": "3f41e54689"
+    },
+    {
+      "source": "fdf313ed23",
       "relation": "defines",
-      "target": "daddffb934"
+      "target": "61216fdf56"
     },
     {
-      "source": "d8018e4f19",
-      "relation": "contains_data_type",
-      "target": "f0b12b5f0e"
+      "source": "1d7220f9a5",
+      "relation": "implements",
+      "target": "a1053b84a1"
     },
     {
-      "source": "7cca888882",
-      "relation": "is_provided_by",
+      "source": "7d5c009e4e",
+      "relation": "contains",
+      "target": "3f41e54689"
+    },
+    {
+      "source": "8d777f385d",
+      "relation": "stores",
+      "target": "3e57f6a936"
+    },
+    {
+      "source": "d77d5e503a",
+      "relation": "is_a",
+      "target": "2e438bd5ec"
+    },
+    {
+      "source": "4fa5be25bd",
+      "relation": "uses_persistence",
+      "target": "63fa20b82f"
+    },
+    {
+      "source": "d77d5e503a",
+      "relation": "contains",
+      "target": "a1bdc993ce"
+    },
+    {
+      "source": "5128f35c9b",
+      "relation": "is_for",
+      "target": "14489dbeb0"
+    },
+    {
+      "source": "b4ef698db8",
+      "relation": "lists",
+      "target": "e45e882e8c"
+    },
+    {
+      "source": "b4ef698db8",
+      "relation": "contains",
+      "target": "e45e882e8c"
+    },
+    {
+      "source": "b4ef698db8",
+      "relation": "lists",
+      "target": "2ba9c027f5"
+    },
+    {
+      "source": "0730bb7c2e",
+      "relation": "is_a",
+      "target": "a1276ade99"
+    },
+    {
+      "source": "718779752b",
+      "relation": "specifies",
+      "target": "45b0c8e7db"
+    },
+    {
+      "source": "8366e8a41b",
+      "relation": "is_a",
+      "target": "f04f45ed15"
+    },
+    {
+      "source": "75ad31bb21",
+      "relation": "format",
+      "target": "f50a26a1c5"
+    },
+    {
+      "source": "53bdc59ba6",
+      "relation": "details",
+      "target": "0918ff42cf"
+    },
+    {
+      "source": "fcd31a4939",
+      "relation": "contains",
+      "target": "6ebc531a3e"
+    },
+    {
+      "source": "eb35e43aff",
+      "relation": "contains",
+      "target": "ca15fd43df"
+    },
+    {
+      "source": "eb35e43aff",
+      "relation": "contains",
+      "target": "ecd027c0cb"
+    },
+    {
+      "source": "36c4536996",
+      "relation": "has_property",
+      "target": "36cd38f49b"
+    },
+    {
+      "source": "09039bd162",
+      "relation": "uses_relation_type",
+      "target": "39405cf152"
+    },
+    {
+      "source": "679cf970ec",
+      "relation": "includes",
+      "target": "93c2179248"
+    },
+    {
+      "source": "679cf970ec",
+      "relation": "includes",
+      "target": "d985fc1df4"
+    },
+    {
+      "source": "b00d33e8f9",
+      "relation": "contains",
+      "target": "e6749b1493"
+    },
+    {
+      "source": "e0b8e48d69",
+      "relation": "is_a",
+      "target": "4468034ea3"
+    },
+    {
+      "source": "8104f6ee32",
+      "relation": "checks_connectivity_of",
+      "target": "91e60066a5"
+    },
+    {
+      "source": "8491f5ef24",
+      "relation": "returns_status_code",
+      "target": "af58037963"
+    },
+    {
+      "source": "133aa2e781",
+      "relation": "indicates",
+      "target": "304c465eb4"
+    },
+    {
+      "source": "8104f6ee32",
+      "relation": "requires_request",
+      "target": "1aefbcd477"
+    },
+    {
+      "source": "f5a3cbfa92",
+      "relation": "purpose",
+      "target": "e8b4ce3186"
+    },
+    {
+      "source": "f5a3cbfa92",
+      "relation": "requires_request_format",
+      "target": "7e9a545502"
+    },
+    {
+      "source": "f5a3cbfa92",
+      "relation": "has_validation_rule",
+      "target": "7d9ebcc3b0"
+    },
+    {
+      "source": "f5a3cbfa92",
+      "relation": "rejects_if",
+      "target": "046ff2b09f"
+    },
+    {
+      "source": "f5a3cbfa92",
+      "relation": "rejects_if",
+      "target": "f70c36a169"
+    },
+    {
+      "source": "268b91c119",
+      "relation": "purpose",
+      "target": "c6740cb211"
+    },
+    {
+      "source": "71ce2394ef",
+      "relation": "calls_endpoint",
+      "target": "268b91c119"
+    },
+    {
+      "source": "268b91c119",
+      "relation": "response_data_contains",
+      "target": "0daa440d17"
+    },
+    {
+      "source": "a01419ad62",
+      "relation": "leads_to",
+      "target": "9ea3e1b6f7"
+    },
+    {
+      "source": "c62ab4fd3b",
+      "relation": "is_a",
+      "target": "7b1a92e4ed"
+    },
+    {
+      "source": "d1fce273d6",
+      "relation": "uses",
+      "target": "4fa5be25bd"
+    },
+    {
+      "source": "581185d60f",
+      "relation": "uses_model",
+      "target": "ac904cf42f"
+    },
+    {
+      "source": "609d0cbee8",
+      "relation": "purpose",
+      "target": "5b9fe3ad7e"
+    },
+    {
+      "source": "bc7e8d8add",
+      "relation": "version",
+      "target": "0eb3c700e8"
+    },
+    {
+      "source": "630e5def08",
+      "relation": "contains_endpoint",
+      "target": "47a546f420"
+    },
+    {
+      "source": "90a1afd85b",
+      "relation": "consumes_input_state",
+      "target": "1b1cc7f086"
+    },
+    {
+      "source": "90a1afd85b",
+      "relation": "uses_system_message",
+      "target": "1e7ccf7cc2"
+    },
+    {
+      "source": "90a1afd85b",
+      "relation": "calls_api",
+      "target": "b63ab72a4e"
+    },
+    {
+      "source": "90a1afd85b",
+      "relation": "writes_output_state",
+      "target": "60e662a95b"
+    },
+    {
+      "source": "90a1afd85b",
+      "relation": "updates_state",
+      "target": "f7d4736d15"
+    },
+    {
+      "source": "d1fce273d6",
+      "relation": "consumes_input_state",
+      "target": "1b1cc7f086"
+    },
+    {
+      "source": "d1fce273d6",
+      "relation": "uses_component",
+      "target": "2fb85bd1fe"
+    },
+    {
+      "source": "d1fce273d6",
+      "relation": "performs_search_against",
+      "target": "4fa5be25bd"
+    },
+    {
+      "source": "7fe1ef03f5",
+      "relation": "uses",
+      "target": "4fa5be25bd"
+    },
+    {
+      "source": "f152b93202",
+      "relation": "performs",
+      "target": "71aceae722"
+    },
+    {
+      "source": "7fe1ef03f5",
+      "relation": "outputs",
+      "target": "d97682483a"
+    },
+    {
+      "source": "e5259c26b0",
+      "relation": "uses",
+      "target": "50014fd06d"
+    },
+    {
+      "source": "7a9e0d0b83",
+      "relation": "performs",
+      "target": "e443c18735"
+    },
+    {
+      "source": "07169b5077",
+      "relation": "consumes_input",
+      "target": "5c18ef7277"
+    },
+    {
+      "source": "07169b5077",
+      "relation": "consumes_input",
+      "target": "1b1cc7f086"
+    },
+    {
+      "source": "581185d60f",
+      "relation": "uses",
+      "target": "d1fc5ed220"
+    },
+    {
+      "source": "2c5af96a6a",
+      "relation": "has_system_role",
+      "target": "645893c098"
+    },
+    {
+      "source": "2c5af96a6a",
+      "relation": "describes_criteria",
+      "target": "5956aae43b"
+    },
+    {
+      "source": "2c5af96a6a",
+      "relation": "requires_process",
+      "target": "a9a03b9cf2"
+    },
+    {
+      "source": "97576ed716",
+      "relation": "has_system_role",
+      "target": "63c987e957"
+    },
+    {
+      "source": "97576ed716",
+      "relation": "uses_rules",
+      "target": "c0ded4b3ea"
+    },
+    {
+      "source": "97576ed716",
+      "relation": "requires_process",
+      "target": "b820db4f84"
+    },
+    {
+      "source": "97576ed716",
+      "relation": "demands_output_format",
+      "target": "dbf8d75027"
+    },
+    {
+      "source": "f24eaaa575",
+      "relation": "is_a",
+      "target": "1b26da3044"
+    },
+    {
+      "source": "f24eaaa575",
+      "relation": "instructs_role_as",
+      "target": "c6051043f8"
+    },
+    {
+      "source": "f24eaaa575",
+      "relation": "provides",
+      "target": "4f2a07438e"
+    },
+    {
+      "source": "f24eaaa575",
+      "relation": "instructs_reasoning_through",
+      "target": "4307ace02d"
+    },
+    {
+      "source": "f24eaaa575",
+      "relation": "has_rules",
+      "target": "0f99574a42"
+    },
+    {
+      "source": "d1fc5ed220",
+      "relation": "may emit",
+      "target": "6076ec7580"
+    },
+    {
+      "source": "9dfc30d31a",
+      "relation": "is_separate_from",
+      "target": "d1fc5ed220"
+    },
+    {
+      "source": "9dfc30d31a",
+      "relation": "runs_concurrently_in",
       "target": "8701923fa6"
     },
     {
-      "source": "0e8b15df2c",
-      "relation": "exposes_endpoints_for",
-      "target": "3d78ec5456"
+      "source": "33c04304ee",
+      "relation": "requires_download",
+      "target": "8c5eebfc32"
     },
     {
-      "source": "fc242fd5ed",
-      "relation": "uses_input_data",
-      "target": "f6313ac51d"
+      "source": "33c04304ee",
+      "relation": "requires_download",
+      "target": "dd888630c2"
     },
     {
-      "source": "f6313ac51d",
-      "relation": "helps_understand",
-      "target": "0037e8560e"
+      "source": "a4a8abf5af",
+      "relation": "sets",
+      "target": "56a6b15c18"
     },
     {
-      "source": "75b3ca026b",
-      "relation": "manages_data_type",
-      "target": "480cec22ee"
+      "source": "a4a8abf5af",
+      "relation": "recommends_setting",
+      "target": "dcb218b469"
     },
     {
-      "source": "835be98332",
-      "relation": "enables_cross_referencing_of",
-      "target": "1232123bcf"
+      "source": "29d40fcfc5",
+      "relation": "uses_default_address",
+      "target": "add5073d7d"
     },
     {
-      "source": "3bedcd3bd8",
-      "relation": "manages",
-      "target": "1f3e438846"
+      "source": "a53b1d4009",
+      "relation": "involves_step",
+      "target": "935d289da9"
     },
     {
-      "source": "ccb6f41de2",
-      "relation": "prevents_risk_of",
-      "target": "feeaf2d899"
+      "source": "e124e7543d",
+      "relation": "is_a",
+      "target": "630eef78d1"
     },
     {
-      "source": "548f088b3f",
-      "relation": "should migrate to",
-      "target": "5007d7f37a"
+      "source": "ed479ebacd",
+      "relation": "action",
+      "target": "2dc9bca1a0"
     },
     {
-      "source": "71d925f159",
-      "relation": "must support",
-      "target": "9789fe4af2"
+      "source": "4bbe64e597",
+      "relation": "starts",
+      "target": "87dcc0d367"
     },
     {
-      "source": "8031c37727",
-      "relation": "enhances capability through",
-      "target": "b3f3e75bda"
+      "source": "3d9ef9007b",
+      "relation": "starts",
+      "target": "71ce2394ef"
     },
     {
-      "source": "f951720dfc",
-      "relation": "is facilitated by",
-      "target": "5fa2002463"
+      "source": "8701923fa6",
+      "relation": "expected_status",
+      "target": "dacb64899b"
     },
     {
-      "source": "01f2e4afa9",
-      "relation": "provides flexibility for",
-      "target": "4650b90ce5"
+      "source": "d5dea353e7",
+      "relation": "requires_port",
+      "target": "67ff32d40f"
+    },
+    {
+      "source": "71ce2394ef",
+      "relation": "access_url",
+      "target": "dcb6d985b4"
+    },
+    {
+      "source": "d775a7389a",
+      "relation": "are defined in",
+      "target": "fb1a687242"
+    },
+    {
+      "source": "fb1a687242",
+      "relation": "is a",
+      "target": "79c2ce74ce"
+    },
+    {
+      "source": "094965daf8",
+      "relation": "contains section",
+      "target": "82d271511b"
+    },
+    {
+      "source": "094965daf8",
+      "relation": "contains section",
+      "target": "5538812a96"
+    },
+    {
+      "source": "094965daf8",
+      "relation": "contains section",
+      "target": "3ecec9d0c8"
+    },
+    {
+      "source": "094965daf8",
+      "relation": "contains section",
+      "target": "1c1d97e90b"
+    },
+    {
+      "source": "094965daf8",
+      "relation": "contains section",
+      "target": "98bac38336"
+    },
+    {
+      "source": "bd9e36bc99",
+      "relation": "contains_section",
+      "target": "23088b1e7f"
+    },
+    {
+      "source": "bd9e36bc99",
+      "relation": "contains_section",
+      "target": "ee62fe1de3"
+    },
+    {
+      "source": "bd9e36bc99",
+      "relation": "contains_section",
+      "target": "f2c6ab5b8c"
+    },
+    {
+      "source": "bd9e36bc99",
+      "relation": "details",
+      "target": "d6fa724e6c"
+    },
+    {
+      "source": "1749650db3",
+      "relation": "is_a",
+      "target": "47cb06083e"
+    },
+    {
+      "source": "bce796002e",
+      "relation": "contains_section",
+      "target": "8366e8a41b"
+    },
+    {
+      "source": "bce796002e",
+      "relation": "contains_section",
+      "target": "53bdc59ba6"
+    },
+    {
+      "source": "bce796002e",
+      "relation": "contains_section",
+      "target": "fcd31a4939"
+    },
+    {
+      "source": "ae2b1fca51",
+      "relation": "has_approach",
+      "target": "157d9d2407"
+    },
+    {
+      "source": "ae2b1fca51",
+      "relation": "has_approach",
+      "target": "3426c8b35c"
+    },
+    {
+      "source": "0325a94098",
+      "relation": "lacks",
+      "target": "d299caded0"
+    },
+    {
+      "source": "0325a94098",
+      "relation": "lacks",
+      "target": "54535a46b2"
+    },
+    {
+      "source": "3b0891856b",
+      "relation": "is_a",
+      "target": "c182d92a86"
+    },
+    {
+      "source": "d4ba0457ab",
+      "relation": "incorporates",
+      "target": "ffaa5debe4"
+    },
+    {
+      "source": "a6695caba4",
+      "relation": "demonstrates",
+      "target": "48da0eedf4"
+    },
+    {
+      "source": "640b01ff3c",
+      "relation": "ensures",
+      "target": "f93ed3a0d6"
+    },
+    {
+      "source": "a6695caba4",
+      "relation": "is suitable for",
+      "target": "3b671c5fc9"
+    },
+    {
+      "source": "e2e6634435",
+      "relation": "combines",
+      "target": "8de578be05"
+    },
+    {
+      "source": "e2e6634435",
+      "relation": "handles",
+      "target": "10d75c5601"
+    },
+    {
+      "source": "59ff576d68",
+      "relation": "uses",
+      "target": "0f27070bea"
+    },
+    {
+      "source": "59ff576d68",
+      "relation": "function",
+      "target": "556ea2f610"
+    },
+    {
+      "source": "123d6de02a",
+      "relation": "provides",
+      "target": "57bc305608"
+    },
+    {
+      "source": "57bc305608",
+      "relation": "contains",
+      "target": "93d82c8403"
+    },
+    {
+      "source": "57bc305608",
+      "relation": "contains",
+      "target": "a8038e912a"
+    },
+    {
+      "source": "57bc305608",
+      "relation": "contains",
+      "target": "378972c828"
+    },
+    {
+      "source": "123d6de02a",
+      "relation": "is_critical_for",
+      "target": "199d68e476"
+    },
+    {
+      "source": "cb2c10bbc4",
+      "relation": "include",
+      "target": "b58d739af6"
+    },
+    {
+      "source": "cb2c10bbc4",
+      "relation": "include",
+      "target": "975f046e86"
+    },
+    {
+      "source": "21e7707452",
+      "relation": "demonstrates",
+      "target": "76bcfee7bc"
+    },
+    {
+      "source": "e6185ac5d5",
+      "relation": "does_not_require",
+      "target": "c8ae0dfc99"
+    },
+    {
+      "source": "4567b95c0f",
+      "relation": "published",
+      "target": "93bdac7a32"
+    },
+    {
+      "source": "6feb75706f",
+      "relation": "is_a",
+      "target": "c21749041f"
+    },
+    {
+      "source": "4567b95c0f",
+      "relation": "published_in",
+      "target": "e6d9c8b009"
+    },
+    {
+      "source": "a73619f519",
+      "relation": "published",
+      "target": "c9b06707b4"
+    },
+    {
+      "source": "d6eecfa01b",
+      "relation": "is_a",
+      "target": "083962f39a"
+    },
+    {
+      "source": "ea4e9cdc56",
+      "relation": "contains",
+      "target": "5fa5bd2853"
+    },
+    {
+      "source": "22809f26d0",
+      "relation": "shows_topology_of",
+      "target": "49ff713ae5"
+    },
+    {
+      "source": "22809f26d0",
+      "relation": "contains_layers",
+      "target": "45fae6c829"
+    },
+    {
+      "source": "0d894b215a",
+      "relation": "shows_data_flow_from",
+      "target": "14049b5251"
+    },
+    {
+      "source": "a6854b4beb",
+      "relation": "shows_flow_of",
+      "target": "8d0606adf3"
+    },
+    {
+      "source": "4468034ea3",
+      "relation": "models_relationships_between",
+      "target": "2f1f08094e"
+    },
+    {
+      "source": "f21d2885bd",
+      "relation": "shows_detailed_flow_of",
+      "target": "50f8602e5f"
+    },
+    {
+      "source": "455057e32b",
+      "relation": "contains",
+      "target": "322696d3ad"
+    },
+    {
+      "source": "322696d3ad",
+      "relation": "are_located_in",
+      "target": "f12409b712"
+    },
+    {
+      "source": "90fbaa8269",
+      "relation": "is_a",
+      "target": "9769700fa7"
+    },
+    {
+      "source": "e98d2f001d",
+      "relation": "contains",
+      "target": "1bcdf5bdbc"
+    },
+    {
+      "source": "e98d2f001d",
+      "relation": "generated_on",
+      "target": "0ab7d8ab5b"
+    },
+    {
+      "source": "376062840a",
+      "relation": "derived_from",
+      "target": "a1276ade99"
+    },
+    {
+      "source": "376062840a",
+      "relation": "derived_from",
+      "target": "3c78fa8b3e"
+    },
+    {
+      "source": "376062840a",
+      "relation": "derived_from",
+      "target": "3463cb0e06"
+    },
+    {
+      "source": "a5e200bf22",
+      "relation": "location",
+      "target": "d5b8ba2c56"
     }
   ]
 }

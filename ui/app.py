@@ -218,6 +218,19 @@ st.markdown("""
         border-radius: 12px !important;
     }
 
+    /* User messages on the right */
+    [data-testid="stChatMessage"]:has([aria-label="Chat message from user"]) {
+        flex-direction: row-reverse !important;
+    }
+    [data-testid="stChatMessage"]:has([aria-label="Chat message from user"]) [data-testid="stMarkdownContainer"] {
+        text-align: right !important;
+    }
+
+    /* Assistant messages on the left (default) */
+    [data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"]) {
+        flex-direction: row !important;
+    }
+
     /* ── Sidebar ────────────────────────────────────── */
     section[data-testid="stSidebar"] {
         border-right: 1px solid rgba(255,255,255,0.06);
@@ -306,7 +319,7 @@ with st.sidebar:
 
     uploaded_files = st.file_uploader(
         "Drop your PDFs / DOCX files",
-        type=["pdf", "docx", "doc"],
+        type=["pdf", "docx"],
         accept_multiple_files=True,
         key="file_uploader",
         help="Upload course materials. They'll be processed locally into the knowledge base.",
