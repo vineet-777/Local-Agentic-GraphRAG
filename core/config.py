@@ -33,9 +33,15 @@ LM_STUDIO_API_KEY = "lm-studio"
 client = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key=LM_STUDIO_API_KEY)
 
 # Models tuned for AMD Radeon RX 6500M — 4GB VRAM, Q4_K_M quants
-ROUTER_MODEL = "google/gemma-4-e4b"
-SYNTHESISER_MODEL = "google/gemma-4-e4b"
-EMBEDDING_MODEL = "text-embedding-nomic-embed-text-v1.5"
+ROUTER_MODEL = os.getenv("ROUTER_MODEL", "google/gemma-4-e4b")
+SYNTHESISER_MODEL = os.getenv("SYNTHESISER_MODEL", "google/gemma-4-e4b")
+
+# Embedding model — Native support for Google's EmbeddingGemma-2 with automatic fallback
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "google/embeddinggemma-2")
+FALLBACK_EMBEDDING_MODEL = "text-embedding-nomic-embed-text-v1.5"
+
+# Matryoshka Representation Learning (MRL) dimension (e.g. 768, 512, 256, 128)
+EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))
 
 # LM Studio inference settings — Gemma 4 E4B supports 128K context,
 # but we keep limits tight for 4GB VRAM (AMD Radeon RX 6500M)
@@ -186,13 +192,22 @@ def is_lm_studio_running() -> dict:
         resp = requests.get(f"{LM_STUDIO_BASE_URL}/models", timeout=5)
         if resp.status_code == 200:
             data = resp.json()
-            models = [m.get("id", "") for m in data.get("data", [])]
+            # Flexible matching for LLM and Embedding models
+            llm_active = SYNTHESISER_MODEL in models or any("gemma" in m.lower() for m in models)
+            embed_active = (
+                EMBEDDING_MODEL in models
+                or FALLBACK_EMBEDDING_MODEL in models
+                or any("embeddinggemma" in m.lower() for m in models)
+                or any("embed" in m.lower() for m in models)
+            )
+            router_active = ROUTER_MODEL in models or any("gemma" in m.lower() for m in models)
+
             return {
                 "running": True,
                 "models_available": models,
-                "llm_ready": SYNTHESISER_MODEL in models,
-                "embed_ready": EMBEDDING_MODEL in models,
-                "router_ready": ROUTER_MODEL in models,
+                "llm_ready": llm_active,
+                "embed_ready": embed_active,
+                "router_ready": router_active,
             }
         return {"running": False, "error": f"Status {resp.status_code}"}
     except requests.ConnectionError:

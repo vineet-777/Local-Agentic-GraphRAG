@@ -17,6 +17,8 @@ from core.config import (
     CHROMA_DIR,
     GRAPH_PATH,
     EMBEDDING_MODEL,
+    FALLBACK_EMBEDDING_MODEL,
+    EMBEDDING_DIM,
     LM_STUDIO_BASE_URL,
     LM_STUDIO_API_KEY,
     TOP_K,
@@ -31,36 +33,82 @@ from core.config import (
 
 class LMStudioEmbeddings:
     """
-    Custom embedding class that uses LM Studio's OpenAI-compatible
-    embeddings endpoint via the shared OpenAI client from config.
-    Implements the interface expected by langchain_chroma.
+    Custom embedding class supporting Google's EmbeddingGemma-2 and Nomic Embed.
+    Includes Matryoshka Representation Learning (MRL) dimensionality truncation
+    and dynamic model detection from LM Studio.
     """
 
-    def __init__(self):
+    def __init__(self, target_dim: Optional[int] = None):
         self.model = EMBEDDING_MODEL
+        self.fallback_model = FALLBACK_EMBEDDING_MODEL
+        self.target_dim = target_dim or EMBEDDING_DIM
+        self._active_model: Optional[str] = None
+
+    def _resolve_model(self) -> str:
+        """Dynamically detect which embedding model is currently loaded in LM Studio."""
+        if self._active_model:
+            return self._active_model
+
+        try:
+            available = [m.id for m in client.models.list().data]
+            if not available:
+                self._active_model = self.model
+                return self._active_model
+
+            # Priority 1: Exact configured EMBEDDING_MODEL
+            if self.model in available:
+                self._active_model = self.model
+            # Priority 2: Any model matching EmbeddingGemma
+            elif any("embeddinggemma" in m.lower() for m in available):
+                self._active_model = next(m for m in available if "embeddinggemma" in m.lower())
+            # Priority 3: Fallback Nomic Embed model
+            elif self.fallback_model in available:
+                self._active_model = self.fallback_model
+            # Priority 4: Any loaded model with 'embed' in name
+            elif any("embed" in m.lower() for m in available):
+                self._active_model = next(m for m in available if "embed" in m.lower())
+            else:
+                self._active_model = self.model
+        except Exception:
+            self._active_model = self.model
+
+        return self._active_model
+
+    def _apply_matryoshka(self, vec: list[float]) -> list[float]:
+        """Apply Matryoshka dimension truncation and L2-normalization for EmbeddingGemma."""
+        if not self.target_dim or self.target_dim >= len(vec):
+            return vec
+        arr = np.array(vec[:self.target_dim], dtype=np.float32)
+        norm = np.linalg.norm(arr)
+        if norm > 0:
+            arr = arr / norm
+        return arr.tolist()
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Embed a list of documents."""
+        model = self._resolve_model()
         embeddings = []
         # Process in batches to avoid overwhelming the local server
         batch_size = 16
         for i in range(0, len(texts), batch_size):
             batch = texts[i:i + batch_size]
             res = client.embeddings.create(
-                model=self.model,
+                model=model,
                 input=batch,
             )
             for item in res.data:
-                embeddings.append(item.embedding)
+                vec = self._apply_matryoshka(item.embedding)
+                embeddings.append(vec)
         return embeddings
 
     def embed_query(self, text: str) -> list[float]:
         """Embed a single query string."""
+        model = self._resolve_model()
         res = client.embeddings.create(
-            model=self.model,
+            model=model,
             input=[text],
         )
-        return res.data[0].embedding
+        return self._apply_matryoshka(res.data[0].embedding)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
