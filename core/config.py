@@ -208,6 +208,9 @@ def is_lm_studio_running() -> dict:
                 "llm_ready": llm_active,
                 "embed_ready": embed_active,
                 "router_ready": router_active,
+                "configured_embed_model": EMBEDDING_MODEL,
+                "configured_llm_model": SYNTHESISER_MODEL,
+                "embedding_dim": EMBEDDING_DIM,
             }
         return {"running": False, "error": f"Status {resp.status_code}"}
     except requests.ConnectionError:

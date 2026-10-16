@@ -1,6 +1,7 @@
 """
-Local GraphRAG — Streamlit Frontend
-Dynamic file upload + chat UI with reasoning trace sidebar.
+Local GraphRAG — Streamlit Frontend v2.0
+Modern Dual-Retrieval UI with EmbeddingGemma-2 Support,
+Real-Time Progress Tracking, and Transparent Reasoning Traces.
 """
 
 import streamlit as st
@@ -18,46 +19,121 @@ API_UPLOAD_STATUS = f"{API_BASE}/api/upload-status"
 # ─── Page Config ──────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="Local GraphRAG",
+    page_title="Local GraphRAG v2.0",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ─── Custom CSS ───────────────────────────────────────────────────────────────
+# ─── Custom CSS (Modern Glassmorphism & Cyber Theme) ─────────────────────────
 
 st.markdown("""
 <style>
-    /* ── Global ─────────────────────────────────────── */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-    .stApp {
-        font-family: 'Inter', sans-serif;
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* ── Header ─────────────────────────────────────── */
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem 2rem;
-        border-radius: 16px;
+    code, pre {
+        font-family: 'JetBrains Mono', monospace !important;
+    }
+
+    /* ── Main Hero Header ───────────────────────────── */
+    .hero-header {
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        border-radius: 20px;
+        padding: 1.6rem 2.2rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.3);
+        backdrop-filter: blur(12px);
     }
-    .main-header h1 {
-        color: white;
-        font-size: 1.8rem;
-        font-weight: 700;
+    .hero-title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .hero-title {
+        color: #f8fafc;
+        font-size: 1.85rem;
+        font-weight: 800;
         margin: 0;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
     }
-    .main-header p {
-        color: rgba(255,255,255,0.85);
-        font-size: 0.95rem;
-        margin: 0.3rem 0 0 0;
-        font-weight: 300;
+    .hero-badge {
+        background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+        color: white;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    .hero-subtitle {
+        color: #94a3b8;
+        font-size: 0.92rem;
+        margin-top: 0.4rem;
+        margin-bottom: 0.8rem;
+    }
+    .hero-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 0.5rem;
+    }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 3px 10px;
+        border-radius: 8px;
+        font-size: 0.74rem;
+        color: #cbd5e1;
+        font-weight: 500;
+    }
+    .pill-accent {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
     }
 
-    /* ── Status badges ──────────────────────────────── */
+    /* ── Quick Starter Cards ────────────────────────── */
+    .quick-start-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        margin: 1.2rem 0;
+    }
+    .quick-card {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 14px 16px;
+        transition: all 0.2s ease;
+    }
+    .quick-card:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        background: rgba(30, 41, 59, 0.7);
+        transform: translateY(-2px);
+    }
+    .quick-card-title {
+        color: #e2e8f0;
+        font-size: 0.84rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .quick-card-desc {
+        color: #64748b;
+        font-size: 0.75rem;
+        line-height: 1.4;
+    }
+
+    /* ── Status Badges ──────────────────────────────── */
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -65,54 +141,54 @@ st.markdown("""
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 0.78rem;
-        font-weight: 500;
+        font-weight: 600;
     }
     .status-ok {
-        background: rgba(16, 185, 129, 0.15);
+        background: rgba(16, 185, 129, 0.12);
         color: #10b981;
         border: 1px solid rgba(16, 185, 129, 0.3);
     }
     .status-err {
-        background: rgba(239, 68, 68, 0.15);
+        background: rgba(239, 68, 68, 0.12);
         color: #ef4444;
         border: 1px solid rgba(239, 68, 68, 0.3);
     }
     .status-warn {
-        background: rgba(245, 158, 11, 0.15);
+        background: rgba(245, 158, 11, 0.12);
         color: #f59e0b;
         border: 1px solid rgba(245, 158, 11, 0.3);
     }
 
-    /* ── Route badge ────────────────────────────────── */
+    /* ── Route Badges ───────────────────────────────── */
     .route-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.82rem;
+        padding: 5px 14px;
+        border-radius: 9999px;
+        font-size: 0.8rem;
         font-weight: 600;
         margin: 4px 0;
     }
     .route-vector {
-        background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.15));
-        color: #3b82f6;
-        border: 1px solid rgba(59,130,246,0.3);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.25));
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.35);
     }
     .route-graph {
-        background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(139,92,246,0.15));
-        color: #a855f7;
-        border: 1px solid rgba(168,85,247,0.3);
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(139, 92, 246, 0.25));
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.35);
     }
 
-    /* ── Trace card ─────────────────────────────────── */
+    /* ── Trace Card ─────────────────────────────────── */
     .trace-card {
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 12px;
-        padding: 12px 16px;
+        padding: 12px 14px;
         margin: 8px 0;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(8px);
     }
     .trace-step-title {
         font-size: 0.82rem;
@@ -122,121 +198,92 @@ st.markdown("""
     }
     .trace-detail {
         font-size: 0.77rem;
-        color: rgba(255,255,255,0.6);
+        color: #94a3b8;
         line-height: 1.5;
     }
     .trace-latency {
         font-size: 0.72rem;
-        color: rgba(255,255,255,0.35);
-        margin-top: 4px;
+        color: #64748b;
+        margin-top: 5px;
     }
 
-    /* ── Error / info banner ────────────────────────── */
-    .error-banner {
-        background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(185,28,28,0.1));
-        border: 1px solid rgba(239,68,68,0.3);
-        border-radius: 12px;
-        padding: 1.2rem 1.5rem;
-        margin: 1rem 0;
-    }
-    .error-banner h3 {
-        color: #ef4444;
-        font-size: 1rem;
-        margin: 0 0 0.5rem 0;
-    }
-    .error-banner p {
-        color: rgba(255,255,255,0.7);
-        font-size: 0.88rem;
-        margin: 0;
-        line-height: 1.6;
-    }
-
-    .info-banner {
-        background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(99,102,241,0.08));
-        border: 1px solid rgba(99,102,241,0.25);
-        border-radius: 12px;
-        padding: 1.2rem 1.5rem;
-        margin: 1rem 0;
-    }
-    .info-banner h3 {
-        color: #818cf8;
-        font-size: 1rem;
-        margin: 0 0 0.5rem 0;
-    }
-    .info-banner p {
-        color: rgba(255,255,255,0.7);
-        font-size: 0.88rem;
-        margin: 0;
-        line-height: 1.6;
-    }
-
-    /* ── Processing card ────────────────────────────── */
+    /* ── Processing Card ────────────────────────────── */
     .processing-card {
-        background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.08));
-        border: 1px solid rgba(16,185,129,0.25);
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.12));
+        border: 1px solid rgba(16, 185, 129, 0.3);
         border-radius: 12px;
         padding: 1rem 1.2rem;
         margin: 0.5rem 0;
     }
     .processing-card .stage {
         font-size: 0.85rem;
-        font-weight: 600;
-        color: #10b981;
+        font-weight: 700;
+        color: #34d399;
         margin-bottom: 4px;
     }
     .processing-card .message {
         font-size: 0.8rem;
-        color: rgba(255,255,255,0.6);
+        color: #cbd5e1;
     }
 
-    /* ── Upload area ────────────────────────────────── */
-    .upload-section {
-        background: rgba(255,255,255,0.02);
-        border: 1px dashed rgba(255,255,255,0.15);
-        border-radius: 12px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-    }
-
-    /* ── DB stats ────────────────────────────────────── */
+    /* ── Database Stat Chips ────────────────────────── */
     .db-stat {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 3px 10px;
+        gap: 5px;
+        padding: 4px 10px;
         border-radius: 8px;
         font-size: 0.72rem;
-        font-weight: 500;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-        color: rgba(255,255,255,0.5);
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
         margin: 2px;
     }
 
-    /* ── Chat area ──────────────────────────────────── */
-    .stChatMessage {
-        border-radius: 12px !important;
+    /* ── Banners ────────────────────────────────────── */
+    .error-banner {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.1));
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 14px;
+        padding: 1.2rem 1.5rem;
+        margin: 1rem 0;
+    }
+    .error-banner h3 {
+        color: #f87171;
+        font-size: 0.98rem;
+        margin: 0 0 0.4rem 0;
+    }
+    .error-banner p {
+        color: #cbd5e1;
+        font-size: 0.86rem;
+        margin: 0;
+        line-height: 1.5;
     }
 
-    /* User messages on the right */
-    [data-testid="stChatMessage"]:has([aria-label="Chat message from user"]) {
-        flex-direction: row-reverse !important;
+    .info-banner {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.08));
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 14px;
+        padding: 1.2rem 1.5rem;
+        margin: 1rem 0;
     }
-    [data-testid="stChatMessage"]:has([aria-label="Chat message from user"]) [data-testid="stMarkdownContainer"] {
-        text-align: right !important;
+    .info-banner h3 {
+        color: #818cf8;
+        font-size: 0.98rem;
+        margin: 0 0 0.4rem 0;
+    }
+    .info-banner p {
+        color: #cbd5e1;
+        font-size: 0.86rem;
+        margin: 0;
+        line-height: 1.5;
     }
 
-    /* Assistant messages on the left (default) */
-    [data-testid="stChatMessage"]:has([aria-label="Chat message from assistant"]) {
-        flex-direction: row !important;
-    }
-
-    /* ── Sidebar ────────────────────────────────────── */
+    /* ── Sidebar Polish ─────────────────────────────── */
     section[data-testid="stSidebar"] {
-        border-right: 1px solid rgba(255,255,255,0.06);
-    }
-    section[data-testid="stSidebar"] .block-container {
-        padding-top: 1rem;
+        background-color: #0d1117 !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -318,11 +365,11 @@ with st.sidebar:
     st.markdown("### 📁 Upload Documents")
 
     uploaded_files = st.file_uploader(
-        "Drop your PDFs / DOCX files",
+        "Drop PDFs or DOCX files here",
         type=["pdf", "docx"],
         accept_multiple_files=True,
         key="file_uploader",
-        help="Upload course materials. They'll be processed locally into the knowledge base.",
+        help="Upload course materials. Processed 100% locally into ChromaDB and Knowledge Graph.",
     )
 
     if uploaded_files:
@@ -331,12 +378,13 @@ with st.sidebar:
             size_kb = len(f.getvalue()) / 1024
             st.caption(f"📄 {f.name} ({size_kb:.0f} KB)")
 
-        if st.button("🚀 Process Files", use_container_width=True, type="primary"):
+        # Removed deprecated use_container_width=True
+        if st.button("🚀 Process Files", type="primary"):
             result = upload_files_to_api(uploaded_files)
             if "error" in result:
                 st.error(result["error"])
             else:
-                st.success(result.get("message", "Files queued!"))
+                st.success(result.get("message", "Files queued for processing!"))
                 if result.get("files_rejected"):
                     for rej in result["files_rejected"]:
                         st.warning(f"⚠️ {rej['file']}: {rej['reason']}")
@@ -349,13 +397,12 @@ with st.sidebar:
 
     if proc_status and proc_status.get("is_processing"):
         st.markdown("---")
-        st.markdown("### ⚙️ Processing")
+        st.markdown("### ⚙️ Live Ingestion")
 
         progress_val = proc_status.get("progress", 0.0)
         stage = proc_status.get("stage", "")
         message = proc_status.get("message", "")
 
-        # Stage icons
         stage_icons = {
             "starting": "🔄",
             "extracting": "📄",
@@ -378,13 +425,12 @@ with st.sidebar:
         files_total = proc_status.get("total_files", 0)
         st.caption(f"Files: {files_done}/{files_total}")
 
-        # Auto-refresh while processing
         time.sleep(2)
         st.rerun()
 
     elif proc_status and proc_status.get("stage") == "done" and st.session_state.upload_triggered:
         st.markdown("---")
-        st.success("✅ All files processed!")
+        st.success("✅ All files processed successfully!")
         st.session_state.upload_triggered = False
         time.sleep(1)
         st.rerun()
@@ -401,7 +447,8 @@ with st.sidebar:
     health = check_health()
 
     if health:
-        lm_ok = health.get("lm_studio", {}).get("running", False)
+        lm_info = health.get("lm_studio", {})
+        lm_ok = lm_info.get("running", False)
         db = health.get("database", {})
         db_ok = db.get("ready", False)
 
@@ -417,14 +464,27 @@ with st.sidebar:
             else:
                 st.markdown('<span class="status-badge status-warn">● No Data</span>', unsafe_allow_html=True)
 
-        # DB details
+        # Active Model Badges
+        active_embed = lm_info.get("configured_embed_model", "embeddinggemma-2")
+        short_embed = "EmbeddingGemma-2" if "embeddinggemma" in active_embed.lower() else "Nomic Embed"
+        embed_dim = lm_info.get("embedding_dim", 768)
+
+        st.markdown(f"""
+        <div style="margin-top:8px;">
+            <span class="db-stat">🧬 {short_embed} ({embed_dim}d)</span>
+            <span class="db-stat">⚡ Gemma 4 E4B</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # DB Details
         if db.get("chromadb_exists") or db.get("graph_json_exists"):
-            stats_html = ""
+            stats_html = "<div style='margin-top:4px;'>"
             if db.get("graph_nodes", 0) > 0:
                 stats_html += f'<span class="db-stat">🔗 {db["graph_nodes"]} nodes</span> '
-                stats_html += f'<span class="db-stat">↔️ {db["graph_edges"]} edges</span>'
+                stats_html += f'<span class="db-stat">↔️ {db["graph_edges"]} edges</span> '
             if db.get("chromadb_exists"):
-                stats_html += f' <span class="db-stat">📄 Vector DB active</span>'
+                stats_html += f'<span class="db-stat">📄 ChromaDB Active</span>'
+            stats_html += "</div>"
             st.markdown(stats_html, unsafe_allow_html=True)
 
     else:
@@ -462,29 +522,30 @@ with st.sidebar:
             if step_name == "classify_query":
                 route = step.get("route_chosen", "")
                 badge_class = "route-vector" if route == "vector" else "route-graph"
-                label = "📄 Vector DB" if route == "vector" else "🔗 Knowledge Graph"
+                label = "📄 Vector DB (ChromaDB)" if route == "vector" else "🔗 Knowledge Graph (2-Hop BFS)"
                 st.markdown(f'<span class="route-badge {badge_class}">{label}</span>', unsafe_allow_html=True)
 
             elif step_name == "retrieve_vector":
                 sources = step.get("sources", [])
                 if sources:
-                    with st.expander(f"📋 {len(sources)} chunks retrieved", expanded=False):
+                    with st.expander(f"📋 {len(sources)} Chunks Retrieved", expanded=False):
                         for s in sources:
-                            st.markdown(f"**{s.get('source', 'Unknown')}** (p.{s.get('page', '?')}) — score: {s.get('score', '?')}")
+                            st.markdown(f"**{s.get('source', 'Unknown')}** (p.{s.get('page', '?')}) — *Score: {s.get('score', '?')}*")
                             st.caption(s.get("preview", ""))
 
             elif step_name == "retrieve_graph":
                 triples = step.get("triples", [])
                 if triples:
-                    with st.expander(f"🔗 {len(triples)} triples found", expanded=False):
+                    with st.expander(f"🔗 {len(triples)} Triples Traversed", expanded=False):
                         for t in triples:
-                            st.markdown(f"**{t.get('source','')}** →  *{t.get('relation','')}*  → **{t.get('target','')}**")
+                            st.markdown(f"**{t.get('source','')}**  `—({t.get('relation','')})→`  **{t.get('target','')}**")
 
     else:
-        st.caption("Ask a question to see the reasoning trace here.")
+        st.caption("Ask a question to inspect the live multi-agent reasoning trace here.")
 
     st.markdown("---")
-    if st.button("🗑️ Clear Chat", use_container_width=True):
+    # Removed deprecated use_container_width=True
+    if st.button("🗑️ Clear Chat History"):
         st.session_state.messages = []
         st.session_state.traces = {}
         st.rerun()
@@ -494,11 +555,24 @@ with st.sidebar:
 #  MAIN AREA
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Header
+# Hero Header with Glassmorphism
 st.markdown("""
-<div class="main-header">
-    <h1>🧠 Local GraphRAG</h1>
-    <p>Upload your documents and start asking questions — 100% local, powered by GraphRAG + LM Studio</p>
+<div class="hero-header">
+    <div class="hero-title-row">
+        <h1 class="hero-title">🧠 Local GraphRAG</h1>
+        <span class="hero-badge">v2.0 • EmbeddingGemma</span>
+    </div>
+    <div class="hero-subtitle">
+        Fully-Local Multi-Agent Question-Answering System Using Graph-Augmented & Semantic Retrieval
+    </div>
+    <div class="hero-pills">
+        <span class="pill pill-accent">● 100% On-Device</span>
+        <span class="pill">⚡ Gemma 4 E4B</span>
+        <span class="pill">🧬 Google EmbeddingGemma-2</span>
+        <span class="pill">📄 ChromaDB</span>
+        <span class="pill">🕸️ 2-Hop Graph BFS</span>
+        <span class="pill">🔒 Zero Cloud API</span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -506,14 +580,14 @@ st.markdown("""
 # ─── System Checks ───────────────────────────────────────────────────────────
 
 def show_system_status():
-    """Display actionable banners based on system state."""
+    """Display actionable status banners."""
     if st.session_state.health_data is None:
         st.markdown("""
         <div class="error-banner">
-            <h3>⚠️ Cannot Connect to API Server</h3>
+            <h3>⚠️ FastAPI Backend Server Offline</h3>
             <p>
-                The FastAPI backend is not running at <code>localhost:8000</code>.<br>
-                Start it with: <code>python -m uvicorn api.server:app --host 127.0.0.1 --port 8000</code>
+                Cannot connect to backend at <code>localhost:8000</code>.<br>
+                Start it via terminal: <code>python -m uvicorn api.server:app --host 127.0.0.1 --port 8000 --reload</code>
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -526,41 +600,38 @@ def show_system_status():
     if not lm_studio.get("running"):
         st.markdown("""
         <div class="error-banner">
-            <h3>⚠️ LM Studio Not Running</h3>
+            <h3>⚠️ LM Studio Local Server Not Running</h3>
             <p>
-                Cannot connect to LM Studio at <code>localhost:1234</code>.<br>
-                Please start LM Studio and load the required models.
+                Cannot connect to LM Studio at <code>http://localhost:1234/v1</code>.<br>
+                Please start LM Studio, load your models, and turn ON the Local Server.
             </p>
         </div>
         """, unsafe_allow_html=True)
         return "no_lm_studio"
 
     # Missing models warning
-    missing_models = []
+    missing = []
     if not lm_studio.get("llm_ready"):
-        missing_models.append("gemma-4-e4b-it")
+        missing.append("google/gemma-4-e4b (Router & Synthesizer)")
     if not lm_studio.get("embed_ready"):
-        missing_models.append("nomic-embed-text-v1.5")
-    if not lm_studio.get("router_ready"):
-        missing_models.append("gemma-4-e4b-it (router)")
-    if missing_models:
-        model_list = "<br>".join([f"<code>{m}</code>" for m in missing_models])
+        missing.append("google/embeddinggemma-2 or nomic-embed-text-v1.5")
+    if missing:
+        m_list = "<br>".join([f"• <code>{m}</code>" for m in missing])
         st.markdown(f"""
         <div class="error-banner">
-            <h3>⚠️ Required Models Not Loaded</h3>
-            <p>Please load the following models in LM Studio:<br>{model_list}</p>
+            <h3>⚠️ Required Models Not Loaded in LM Studio</h3>
+            <p>Please load the following models in LM Studio:<br>{m_list}</p>
         </div>
         """, unsafe_allow_html=True)
         return "no_models"
 
-    # No data yet — prompt to upload
     if not db.get("ready"):
         st.markdown("""
         <div class="info-banner">
-            <h3>📂 No Documents Yet</h3>
+            <h3>📂 Knowledge Base Ready for Documents</h3>
             <p>
-                Your knowledge base is empty. Use the <strong>sidebar</strong> to upload
-                PDF or DOCX files — they'll be processed locally into embeddings and a knowledge graph.
+                Your knowledge base is currently empty. Upload your <strong>PDF or DOCX</strong> files 
+                in the sidebar to automatically generate dense vector embeddings and relational graph connections.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -570,17 +641,18 @@ def show_system_status():
 
 
 system_state = show_system_status()
-can_chat = system_state in ("ready", "no_data")  # Allow chat if LM Studio is up, even if no data yet
+can_chat = system_state in ("ready", "no_data")
 
 
-# ─── Chat Interface ──────────────────────────────────────────────────────────
+# ─── Chat Message Loop ───────────────────────────────────────────────────────
 
 for i, msg in enumerate(st.session_state.messages):
     with st.chat_message(msg["role"], avatar="🧑‍🎓" if msg["role"] == "user" else "🧠"):
         st.markdown(msg["content"])
 
+# Prompt Input
 if prompt := st.chat_input(
-    "Ask about your documents..." if system_state == "ready" else "Upload documents first, then ask questions...",
+    "Ask a question about your documents..." if system_state == "ready" else "Upload documents in sidebar to begin...",
     disabled=not can_chat or system_state == "no_data",
 ):
     # Add user message
@@ -590,13 +662,13 @@ if prompt := st.chat_input(
 
     # Query the engine
     with st.chat_message("assistant", avatar="🧠"):
-        with st.spinner("Thinking..."):
+        with st.spinner("Analyzing query and orchestrating retrieval..."):
             try:
                 t0 = time.time()
                 resp = requests.post(
                     API_QUERY,
                     json={"query": prompt},
-                    timeout=300,  # Gemma 4 on 4GB VRAM can be slow
+                    timeout=300,
                 )
                 total_time = round(time.time() - t0, 2)
 
@@ -608,11 +680,11 @@ if prompt := st.chat_input(
 
                     st.markdown(answer)
 
-                    route_label = "📄 Vector DB" if route == "vector" else "🔗 Knowledge Graph"
+                    route_label = "📄 Vector DB (ChromaDB)" if route == "vector" else "🔗 Knowledge Graph"
                     route_class = "route-vector" if route == "vector" else "route-graph"
                     st.markdown(
                         f'<span class="route-badge {route_class}">{route_label}</span> '
-                        f'<span style="font-size:0.75rem;color:rgba(255,255,255,0.4)">({total_time}s)</span>',
+                        f'<span style="font-size:0.75rem;color:#64748b;margin-left:6px;">⏱️ Total Latency: {total_time}s</span>',
                         unsafe_allow_html=True,
                     )
 
@@ -629,8 +701,8 @@ if prompt := st.chat_input(
                     st.error(f"❌ API error ({resp.status_code}): {resp.text}")
 
             except requests.ConnectionError:
-                st.error("❌ Cannot connect to the API server. Is it running?")
+                st.error("❌ Cannot connect to FastAPI server. Please ensure `api.server:app` is running on port 8000.")
             except requests.Timeout:
-                st.error("⏰ Request timed out. The LLM may still be loading.")
+                st.error("⏰ Request timed out. The local LLM took too long to respond.")
             except Exception as e:
                 st.error(f"❌ Unexpected error: {str(e)}")
