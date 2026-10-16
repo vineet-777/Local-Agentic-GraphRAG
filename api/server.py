@@ -116,17 +116,18 @@ async def lifespan(app: FastAPI):
     lm_status = is_lm_studio_running()
     db_status = is_db_ready()
     print("=" * 60)
-    print("  Local GraphRAG — API Server Starting")
+    print("  Local GraphRAG - API Server Starting")
     print("=" * 60)
-    print(f"  LM Studio:   {'✅ Connected' if lm_status.get('running') else '❌ ' + lm_status.get('error', 'Unavailable')}")
-    print(f"  Router:      {'✅ ' + ROUTER_MODEL if lm_status.get('router_ready') else '❌ Model not loaded'}")
-    print(f"  Synthesiser: {'✅ ' + SYNTHESISER_MODEL if lm_status.get('llm_ready') else '❌ Model not loaded'}")
-    print(f"  Embeddings:  {'✅ ' + EMBEDDING_MODEL if lm_status.get('embed_ready') else '❌ Model not loaded'}")
-    print(f"  ChromaDB:    {'✅ Found' if db_status.get('chromadb_exists') else '📭 Empty (upload files to start)'}")
-    print(f"  Graph:       {'✅ ' + str(db_status.get('graph_nodes', 0)) + ' nodes' if db_status.get('graph_json_exists') else '📭 Empty'}")
+    lm_tag = "[OK] Connected" if lm_status.get('running') else f"[X] {lm_status.get('error', 'Unavailable')}"
+    print(f"  LM Studio:   {lm_tag}")
+    print(f"  Router:      {'[OK] ' + ROUTER_MODEL if lm_status.get('router_ready') else '[X] Model not loaded'}")
+    print(f"  Synthesiser: {'[OK] ' + SYNTHESISER_MODEL if lm_status.get('llm_ready') else '[X] Model not loaded'}")
+    print(f"  Embeddings:  {'[OK] ' + EMBEDDING_MODEL if lm_status.get('embed_ready') else '[X] Model not loaded'}")
+    print(f"  ChromaDB:    {'[OK] Found' if db_status.get('chromadb_exists') else '[EMPTY] Upload files to start'}")
+    print(f"  Graph:       {'[OK] ' + str(db_status.get('graph_nodes', 0)) + ' nodes' if db_status.get('graph_json_exists') else '[EMPTY]'}")
     print("=" * 60)
     yield
-    print("\n🛑 Local GraphRAG API shutting down.")
+    print("\n[STOP] Local GraphRAG API shutting down.")
 
 
 # ─── App Setup ────────────────────────────────────────────────────────────────
