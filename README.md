@@ -49,9 +49,10 @@ streamlit run ui/app.py
 
 Then:
 1. Open `http://localhost:8501` in your browser
-2. Upload PDF/DOCX files via the sidebar
-3. Wait for processing (progress bar shown)
-4. Start chatting!
+2. Create an account or sign in on the welcome screen
+3. Upload PDF/DOCX files via the sidebar
+4. Wait for processing (progress bar shown)
+5. Start chatting!
 
 ## Project Structure
 
@@ -100,3 +101,5 @@ Signup and sign-in return an opaque bearer token that expires after seven days. 
 - **Persistent Storage**: All data survives app restarts (stored in `/db/`)
 - **Local Authentication**: SQLite accounts, Argon2 password hashing, expiring and revocable sessions
 - **100% Local**: All inference via LM Studio — no cloud, no API keys, no data leaves your machine
+
+> Accounts authenticate access to the local GraphRAG API. The knowledge base is shared by accounts on this local installation; it is not partitioned per user.

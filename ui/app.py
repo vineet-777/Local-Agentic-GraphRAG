@@ -14,6 +14,10 @@ API_QUERY = f"{API_BASE}/api/query"
 API_HEALTH = f"{API_BASE}/api/health"
 API_UPLOAD = f"{API_BASE}/api/upload"
 API_UPLOAD_STATUS = f"{API_BASE}/api/upload-status"
+API_AUTH_SIGNUP = f"{API_BASE}/api/auth/signup"
+API_AUTH_SIGNIN = f"{API_BASE}/api/auth/signin"
+API_AUTH_ME = f"{API_BASE}/api/auth/me"
+API_AUTH_LOGOUT = f"{API_BASE}/api/auth/logout"
 
 # ─── Page Config ──────────────────────────────────────────────────────────────
 
@@ -241,9 +245,157 @@ if "health_data" not in st.session_state:
     st.session_state.health_data = None
 if "upload_triggered" not in st.session_state:
     st.session_state.upload_triggered = False
+if "access_token" not in st.session_state:
+    st.session_state.access_token = None
+if "current_user" not in st.session_state:
+    st.session_state.current_user = None
+if "auth_error" not in st.session_state:
+    st.session_state.auth_error = None
 
 
 # ─── API Helpers ──────────────────────────────────────────────────────────────
+
+def auth_headers():
+    """Return bearer credentials for endpoints that require a signed-in user."""
+    token = st.session_state.get("access_token")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
+def clear_session():
+    """Clear local identity and user-specific UI state."""
+    st.session_state.access_token = None
+    st.session_state.current_user = None
+    st.session_state.messages = []
+    st.session_state.traces = {}
+    st.session_state.upload_triggered = False
+
+
+def expire_session():
+    """Return to the sign-in screen when the backend rejects an expired token."""
+    clear_session()
+    st.session_state.auth_error = "Your session expired. Please sign in again."
+    st.rerun()
+
+
+def save_auth_response(response):
+    """Store a successful signup/signin response in Streamlit session state."""
+    data = response.json()
+    st.session_state.access_token = data["access_token"]
+    st.session_state.current_user = data["user"]
+    st.session_state.auth_error = None
+    st.rerun()
+
+
+def response_detail(response):
+    """Get a readable API error message, including FastAPI validation errors."""
+    try:
+        detail = response.json().get("detail", response.text)
+        if isinstance(detail, list):
+            return "; ".join(item.get("msg", str(item)) for item in detail)
+        return str(detail)
+    except (ValueError, AttributeError):
+        return response.text or f"Request failed ({response.status_code})."
+
+
+def render_auth_page():
+    """Render signup and signin forms before any GraphRAG features are shown."""
+    st.markdown("""
+    <div class="main-header">
+        <h1>🧠 Local GraphRAG</h1>
+        <p>Sign in to your local knowledge workspace</p>
+    </div>
+    """, unsafe_allow_html=True)
+    _, auth_column, _ = st.columns([1, 1.2, 1])
+    with auth_column:
+        st.markdown("### Welcome")
+        st.caption("Your account and session are stored locally by this GraphRAG server.")
+        if st.session_state.auth_error:
+            st.warning(st.session_state.auth_error)
+
+        signin_tab, signup_tab = st.tabs(["Sign in", "Create account"])
+        with signin_tab:
+            with st.form("signin_form"):
+                signin_email = st.text_input("Email", key="signin_email", autocomplete="email")
+                signin_password = st.text_input(
+                    "Password", type="password", key="signin_password", autocomplete="current-password"
+                )
+                signin_submitted = st.form_submit_button("Sign in", type="primary", use_container_width=True)
+            if signin_submitted:
+                if not signin_email.strip() or not signin_password:
+                    st.error("Enter your email and password.")
+                else:
+                    try:
+                        response = requests.post(
+                            API_AUTH_SIGNIN,
+                            json={"email": signin_email.strip(), "password": signin_password},
+                            timeout=15,
+                        )
+                        if response.status_code == 200:
+                            save_auth_response(response)
+                        else:
+                            st.error(response_detail(response))
+                    except requests.ConnectionError:
+                        st.error("Cannot connect to the API server. Start the backend and try again.")
+                    except requests.Timeout:
+                        st.error("The API did not respond in time. Please try again.")
+
+        with signup_tab:
+            with st.form("signup_form"):
+                signup_name = st.text_input("Name", max_chars=80, autocomplete="name")
+                signup_email = st.text_input("Email", autocomplete="email")
+                signup_password = st.text_input(
+                    "Password", type="password", help="Use at least 8 characters.", autocomplete="new-password"
+                )
+                confirm_password = st.text_input(
+                    "Confirm password", type="password", autocomplete="new-password"
+                )
+                signup_submitted = st.form_submit_button(
+                    "Create account", type="primary", use_container_width=True
+                )
+            if signup_submitted:
+                if not signup_name.strip() or not signup_email.strip() or not signup_password:
+                    st.error("Complete all fields to create an account.")
+                elif len(signup_password) < 8:
+                    st.error("Password must be at least 8 characters.")
+                elif signup_password != confirm_password:
+                    st.error("The passwords do not match.")
+                else:
+                    try:
+                        response = requests.post(
+                            API_AUTH_SIGNUP,
+                            json={
+                                "name": signup_name.strip(),
+                                "email": signup_email.strip(),
+                                "password": signup_password,
+                            },
+                            timeout=15,
+                        )
+                        if response.status_code == 201:
+                            save_auth_response(response)
+                        else:
+                            st.error(response_detail(response))
+                    except requests.ConnectionError:
+                        st.error("Cannot connect to the API server. Start the backend and try again.")
+                    except requests.Timeout:
+                        st.error("The API did not respond in time. Please try again.")
+
+
+if st.session_state.access_token:
+    try:
+        user_response = requests.get(API_AUTH_ME, headers=auth_headers(), timeout=10)
+        if user_response.status_code == 200:
+            st.session_state.current_user = user_response.json()
+            st.session_state.auth_error = None
+        else:
+            clear_session()
+            st.session_state.auth_error = "Your session expired. Please sign in again."
+    except requests.RequestException:
+        # Keep the token during a temporary backend outage; the API error is shown below.
+        pass
+
+if not st.session_state.access_token:
+    render_auth_page()
+    st.stop()
 
 def check_health():
     """Ping the FastAPI health endpoint."""
@@ -266,10 +418,12 @@ def check_health():
 def get_processing_status():
     """Poll background file processing status."""
     try:
-        resp = requests.get(API_UPLOAD_STATUS, timeout=5)
+        resp = requests.get(API_UPLOAD_STATUS, headers=auth_headers(), timeout=5)
+        if resp.status_code == 401:
+            expire_session()
         if resp.status_code == 200:
             return resp.json()
-    except Exception:
+    except requests.RequestException:
         pass
     return None
 
@@ -281,7 +435,9 @@ def upload_files_to_api(files):
         for f in files:
             file_tuples.append(("files", (f.name, f.getvalue(), "application/octet-stream")))
 
-        resp = requests.post(API_UPLOAD, files=file_tuples, timeout=30)
+        resp = requests.post(API_UPLOAD, files=file_tuples, headers=auth_headers(), timeout=30)
+        if resp.status_code == 401:
+            expire_session()
         if resp.status_code == 200:
             return resp.json()
         elif resp.status_code == 409:
@@ -289,10 +445,12 @@ def upload_files_to_api(files):
         elif resp.status_code == 503:
             return {"error": resp.json().get("detail", "Service unavailable")}
         else:
-            return {"error": f"Upload failed ({resp.status_code}): {resp.text}"}
+            return {"error": f"Upload failed ({resp.status_code}): {response_detail(resp)}"}
     except requests.ConnectionError:
         return {"error": "Cannot connect to API server."}
-    except Exception as e:
+    except requests.Timeout:
+        return {"error": "Upload request timed out. Please try again."}
+    except requests.RequestException as e:
         return {"error": str(e)}
 
 
@@ -301,6 +459,17 @@ def upload_files_to_api(files):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 with st.sidebar:
+    signed_in_user = st.session_state.get("current_user") or {}
+    st.markdown(f"**Signed in as {signed_in_user.get('name', 'User')}**")
+    st.caption(signed_in_user.get("email", ""))
+    if st.button("Sign out", use_container_width=True):
+        try:
+            requests.post(API_AUTH_LOGOUT, headers=auth_headers(), timeout=10)
+        except requests.RequestException:
+            pass
+        clear_session()
+        st.rerun()
+
     # ─── Section 1: File Upload ───────────────────────────────────────────
     st.markdown("### 📁 Upload Documents")
 
@@ -583,6 +752,7 @@ if prompt := st.chat_input(
                 resp = requests.post(
                     API_QUERY,
                     json={"query": prompt},
+                    headers=auth_headers(),
                     timeout=300,  # Gemma 4 on 4GB VRAM can be slow
                 )
                 total_time = round(time.time() - t0, 2)
@@ -609,11 +779,13 @@ if prompt := st.chat_input(
                     st.session_state.messages.append({"role": "assistant", "content": answer})
                     st.rerun()
 
+                elif resp.status_code == 401:
+                    expire_session()
                 elif resp.status_code == 503:
-                    error_detail = resp.json().get("detail", "Service unavailable")
+                    error_detail = response_detail(resp)
                     st.error(f"⚠️ {error_detail}")
                 else:
-                    st.error(f"❌ API error ({resp.status_code}): {resp.text}")
+                    st.error(f"❌ API error ({resp.status_code}): {response_detail(resp)}")
 
             except requests.ConnectionError:
                 st.error("❌ Cannot connect to the API server. Is it running?")
