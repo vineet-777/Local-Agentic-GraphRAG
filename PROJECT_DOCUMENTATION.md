@@ -968,7 +968,7 @@ All configurable values are defined in `core/config.py`. This is the single sour
 | 3 | **No streaming responses** â€” UI waits for full answer before displaying | The API returns the complete response; no SSE/WebSocket streaming implemented | Implement streaming via FastAPI's `StreamingResponse` and Streamlit's `st.write_stream` |
 | 4 | **Sequential file processing** â€” Multiple files are ingested one at a time | Graph building requires sequential LLM calls per chunk | Could parallelize embedding (Stage 2) while keeping graph building sequential |
 | 5 | **Keyword-based graph retrieval** â€” Graph search uses simple string matching | No embedding-based similarity on graph nodes | Add embedding similarity for node matching, or use a proper graph database (Neo4j) |
-| 6 | **No authentication** â€” API is open to all origins with CORS `*` | Designed for local-only use | Add API key middleware or OAuth if deploying on a network |
+| 6 | **No role-based authorization** â€” authenticated users share the local GraphRAG corpus | Single-user/local deployment model | Add roles and per-user data isolation before multi-user network deployment |
 | 7 | **No document deletion** â€” Once ingested, data cannot be removed | No delete endpoint or UI; ChromaDB and graph.json are append-only | Implement a `/api/delete` endpoint that removes chunks by source filename and prunes graph nodes |
 | 8 | **Fixed chunk size** â€” Same chunking parameters for all file types | PDF pages and DOCX sections have different optimal chunk sizes | Add per-file-type chunking configuration |
 | 9 | **No conversation memory** â€” Each query is independent | LangGraph state is not persisted between queries | Add a conversation history buffer to the `QueryState` and system prompt |

@@ -8,9 +8,10 @@ import shutil
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, EmailStr, Field
 
 # Ensure project root is on sys.path so `core.*` imports work
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -29,6 +30,17 @@ from core.config import (
 from core.engine import run_query
 from core.ingest import extract_text, chunk_documents, embed_chunks, ingest_files
 from core.graph_builder import build_graph_from_chunks
+from api.auth import (
+    UserAlreadyExistsError,
+    authenticate_user,
+    create_session,
+    create_user,
+    get_current_user,
+    initialize_auth_store,
+    revoke_session,
+)
+
+_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 # ─── Background Processing ───────────────────────────────────────────────────
@@ -113,6 +125,7 @@ def _process_uploaded_files(file_paths: list[Path]):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
+    initialize_auth_store()
     lm_status = is_lm_studio_running()
     db_status = is_db_ready()
     print("=" * 60)
@@ -152,6 +165,27 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000, description="The user's question")
 
+class SignupRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+
+class SigninRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=1, max_length=128)
+
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    name: str
+    created_at: str
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: UserResponse
+
 class QueryResponse(BaseModel):
     response: str
     route: str
@@ -180,6 +214,44 @@ class ProcessingStatusResponse(BaseModel):
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
+@app.post("/api/auth/signup", response_model=AuthResponse, status_code=201, tags=["Authentication"])
+async def signup(request: SignupRequest):
+    """Create a local account and immediately start an authenticated session."""
+    try:
+        user = create_user(request.email, request.name, request.password)
+    except UserAlreadyExistsError:
+        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+
+    token, expires_in = create_session(user["id"])
+    return AuthResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+@app.post("/api/auth/signin", response_model=AuthResponse, tags=["Authentication"])
+async def signin(request: SigninRequest):
+    """Verify credentials and issue a new bearer session."""
+    user = authenticate_user(request.email, request.password)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    token, expires_in = create_session(user["id"])
+    return AuthResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+@app.get("/api/auth/me", response_model=UserResponse, tags=["Authentication"])
+async def get_signed_in_user(user: dict = Depends(get_current_user)):
+    """Return the account associated with the supplied bearer session."""
+    return user
+
+
+@app.post("/api/auth/logout", status_code=204, tags=["Authentication"])
+async def logout(
+    _user: dict = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+):
+    """Revoke the current bearer session."""
+    if credentials is not None:
+        revoke_session(credentials.credentials)
+
 @app.get("/api/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
     """System health: LM Studio connectivity + database readiness."""
@@ -199,6 +271,7 @@ async def health_check():
 async def upload_files(
     background_tasks: BackgroundTasks,
     files: list[UploadFile] = File(...),
+    _user: dict = Depends(get_current_user),
 ):
     """
     Upload PDF/DOCX files for ingestion.
@@ -266,7 +339,7 @@ async def upload_files(
 
 
 @app.get("/api/upload-status", response_model=ProcessingStatusResponse, tags=["Ingestion"])
-async def get_upload_status():
+async def get_upload_status(_user: dict = Depends(get_current_user)):
     """Poll this endpoint to track background file processing progress."""
     status = processing_status.get()
     return ProcessingStatusResponse(
@@ -282,7 +355,7 @@ async def get_upload_status():
 
 
 @app.post("/api/query", response_model=QueryResponse, tags=["Query"])
-async def query_engine(request: QueryRequest):
+async def query_engine(request: QueryRequest, _user: dict = Depends(get_current_user)):
     """
     Main query endpoint. Runs the LangGraph pipeline and returns
     the answer + full reasoning trace for sidebar display.

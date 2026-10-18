@@ -1,4 +1,6 @@
 openai
+argon2-cffi
+email-validator
 langchain-chroma
 langchain-core
 langchain-text-splitters

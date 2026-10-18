@@ -79,10 +79,16 @@ Then:
 
 | Endpoint | Method | Description |
 |---|---|---|
+| `/api/auth/signup` | POST | Create an account and return a session token |
+| `/api/auth/signin` | POST | Authenticate and return a session token |
+| `/api/auth/me` | GET | Return the signed-in user (Bearer token required) |
+| `/api/auth/logout` | POST | Revoke the current session |
 | `/api/health` | GET | LM Studio + DB status |
-| `/api/upload` | POST | Upload PDF/DOCX files for processing |
-| `/api/upload-status` | GET | Poll background processing progress |
-| `/api/query` | POST | Ask a question, get answer + reasoning trace |
+| `/api/upload` | POST | Upload PDF/DOCX files for processing (Bearer token required) |
+| `/api/upload-status` | GET | Poll processing progress (Bearer token required) |
+| `/api/query` | POST | Ask a question (Bearer token required) |
+
+Signup and sign-in return an opaque bearer token that expires after seven days. Send it as `Authorization: Bearer <token>` to protected endpoints. Passwords are stored as Argon2 hashes and account/session data is persisted locally in `db/auth.sqlite3`.
 
 ## Features
 
@@ -92,4 +98,5 @@ Then:
 - **Progress Tracking**: Real-time progress bar during file processing
 - **Cold Start Protection**: Clear error messages for missing services or data
 - **Persistent Storage**: All data survives app restarts (stored in `/db/`)
+- **Local Authentication**: SQLite accounts, Argon2 password hashing, expiring and revocable sessions
 - **100% Local**: All inference via LM Studio — no cloud, no API keys, no data leaves your machine
