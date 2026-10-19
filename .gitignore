@@ -23,3 +23,7 @@ Thumbs.db
 # Temporary uploads staging
 uploads/*
 !uploads/.gitkeep
+
+# Reference assets
+codex_unpacked/
+
