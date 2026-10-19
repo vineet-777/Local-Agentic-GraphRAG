@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChatGPT — Local Agentic GraphRAG</title>
-  <link rel="icon" type="image/svg+xml" href="./assets/icons/sparkles-ef86326c9f6e.svg">
+  <title>Local Agentic GraphRAG</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/logo.svg">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -13,8 +13,13 @@
 
     <!-- ── Left Sidebar ─────────────────────────────────────────────── -->
     <aside class="sidebar" id="sidebar">
+      <!-- Sidebar Header -->
       <div class="sidebar-header">
-        <button class="new-chat-btn" id="newChatBtn" title="Start new conversation">
+        <div class="brand-row">
+          <img src="./assets/logo.svg" alt="GraphRAG Logo" class="brand-logo">
+          <span class="brand-name">GraphRAG Codex</span>
+        </div>
+        <button class="new-chat-btn" id="newChatBtn" title="Start new conversation (Ctrl+K)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -23,68 +28,79 @@
         </button>
       </div>
 
-      <!-- Ingestion & Document Dropzone -->
-      <div class="sidebar-section">
-        <div class="sidebar-label">Knowledge Base Ingestion</div>
-        <div class="dropzone" id="dropzone">
-          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt" style="display: none;">
-          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <div class="dropzone-text"><strong>Click or drag PDF/DOCX</strong> to ingest into GraphRAG</div>
-          <div class="dropzone-sub">Extracts Chunks, Embeddings & Triples</div>
+      <!-- Scrollable Sidebar Sections -->
+      <div class="sidebar-scrollable">
+        <!-- 1. Recent Chat History Section -->
+        <div class="sidebar-section">
+          <div class="sidebar-label">Chat History</div>
+          <div class="history-list" id="historyList">
+            <!-- Populated dynamically via localStorage -->
+          </div>
         </div>
 
-        <!-- Ingestion Progress Bar Card -->
-        <div class="progress-card" id="progressCard">
-          <div class="progress-header">
-            <span id="progressStage">Processing...</span>
-            <span id="progressPercent">0%</span>
+        <!-- 2. Multi-Format Knowledge Base Ingestion -->
+        <div class="sidebar-section">
+          <div class="sidebar-label">Knowledge Base Ingestion</div>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.py,.png,.jpg,.jpeg,.webp,.mp4" style="display: none;">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div class="dropzone-text"><strong>Click or drag files</strong> to ingest</div>
+            <div class="dropzone-sub">PDF, DOCX, PPTX, Images, TXT, Video</div>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressBarFill"></div>
-          </div>
-          <div class="progress-desc" id="progressDesc">Extracting text...</div>
-        </div>
-      </div>
 
-      <!-- Live Telemetry Card -->
-      <div class="sidebar-section">
-        <div class="sidebar-label">Engine Telemetry</div>
-        <div class="telemetry-card">
-          <div class="telemetry-item">
-            <span>LM Studio</span>
-            <span class="status-indicator" id="lmStudioStatus">
-              <span class="dot" id="lmDot"></span>
-              <span id="lmText">Checking...</span>
-            </span>
+          <!-- Ingestion Progress Card -->
+          <div class="progress-card" id="progressCard">
+            <div class="progress-header">
+              <span id="progressStage">Processing...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+            <div class="progress-desc" id="progressDesc">Extracting documents...</div>
           </div>
-          <div class="telemetry-item">
-            <span>LLM Router / Synth</span>
-            <span style="color: var(--text-primary); font-weight: 500; font-size: 0.73rem;" id="llmModelTag">gemma-4-e4b</span>
-          </div>
-          <div class="telemetry-item">
-            <span>Embeddings</span>
-            <span style="color: var(--text-primary); font-weight: 500; font-size: 0.73rem;" id="embedModelTag">embeddinggemma-2 (768d)</span>
-          </div>
-          <div class="telemetry-item">
-            <span>Knowledge Graph</span>
-            <span style="color: var(--openai-green); font-weight: 600;" id="graphStats">0 nodes • 0 edges</span>
-          </div>
-          <div class="telemetry-item">
-            <span>ChromaDB</span>
-            <span style="color: var(--openai-green); font-weight: 600;" id="chromaStatus">Checking...</span>
+        </div>
+
+        <!-- 3. Engine Telemetry (Positioned Cleanly on Left Side) -->
+        <div class="sidebar-section">
+          <div class="sidebar-label">Engine Telemetry</div>
+          <div class="telemetry-card">
+            <div class="telemetry-item">
+              <span>LM Studio</span>
+              <span class="status-indicator" id="lmStudioStatus">
+                <span class="dot" id="lmDot"></span>
+                <span id="lmText">Checking...</span>
+              </span>
+            </div>
+            <div class="telemetry-item">
+              <span>LLM Router / Synth</span>
+              <span style="color: var(--text-primary); font-weight: 500; font-size: 0.72rem;" id="llmModelTag">gemma-4-e4b</span>
+            </div>
+            <div class="telemetry-item">
+              <span>Embeddings</span>
+              <span style="color: var(--text-primary); font-weight: 500; font-size: 0.72rem;" id="embedModelTag">embeddinggemma-2 (768d)</span>
+            </div>
+            <div class="telemetry-item">
+              <span>Knowledge Graph</span>
+              <span style="color: var(--openai-green); font-weight: 600;" id="graphStats">0 nodes • 0 edges</span>
+            </div>
+            <div class="telemetry-item">
+              <span>ChromaDB</span>
+              <span style="color: var(--openai-green); font-weight: 600;" id="chromaStatus">Checking...</span>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Sidebar Footer -->
       <div class="sidebar-footer">
-        <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+        <div style="font-size: 0.71rem; color: var(--text-muted); line-height: 1.4;">
           <strong>Local-Agentic-GraphRAG v2.0</strong><br>
-          AMD RX 6500M 4GB VRAM Optimized
+          AMD RX 6500M 4GB VRAM Native
         </div>
       </div>
     </aside>
@@ -102,7 +118,7 @@
             </svg>
           </button>
 
-          <!-- Model Selector Pill (ChatGPT Style) -->
+          <!-- Model Selector Pill -->
           <div class="model-pill" id="modelPill" title="Local Multi-Agent GraphRAG Pipeline">
             <span class="model-dot"></span>
             <span class="model-name">Gemma 4 e4b</span>
@@ -113,14 +129,35 @@
           </div>
         </div>
 
+        <!-- Top Right Actions: Export PDF & Theme Toggle (Clean, No Upload here) -->
         <div class="header-right">
-          <div class="pill-badge" id="headerTelemetryBadge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          <!-- Export PDF / Report Button -->
+          <button class="action-pill-btn" id="exportPdfBtn" title="Export conversation as PDF / Report">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
-            <span id="quickStats">345 Nodes • 244 Edges</span>
-          </div>
+            <span>Export PDF</span>
+          </button>
+
+          <!-- Dark / Light Mode Switcher -->
+          <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode">
+            <svg id="themeIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Sun / Moon will be rendered by JS -->
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -128,13 +165,11 @@
       <div class="chat-viewport" id="chatViewport">
         <!-- Hero Welcome View (Shown when conversation is empty) -->
         <div class="hero-view" id="heroView">
-          <div class="hero-logo">
-            <!-- Exact Authentic OpenAI Blossom SVG from codex_unpacked -->
-            <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.6475 18.3409C11.0975 18.3409 10.575 18.2364 10.08 18.0274C9.58502 17.8184 9.14502 17.5269 8.76002 17.1529C8.34202 17.2959 7.90751 17.3674 7.45651 17.3674C6.71951 17.3674 6.03751 17.1859 5.41051 16.8229C4.78351 16.4599 4.27751 15.9649 3.89251 15.3379C3.51851 14.7109 3.33151 14.0124 3.33151 13.2424C3.33151 12.9234 3.37551 12.5769 3.46351 12.2029C3.02351 11.7959 2.68251 11.3284 2.44051 10.8004C2.19851 10.2614 2.07751 9.70044 2.07751 9.11744C2.07751 8.52344 2.20401 7.95144 2.45701 7.40144C2.71001 6.85144 3.06201 6.37844 3.51301 5.98244C3.97501 5.57544 4.50851 5.29494 5.11351 5.14094C5.23451 4.51394 5.48751 3.95294 5.87251 3.45794C6.26851 2.95194 6.75252 2.55594 7.32452 2.26994C7.89652 1.98394 8.50702 1.84094 9.15602 1.84094C9.70602 1.84094 10.2285 1.94544 10.7235 2.15444C11.2185 2.36344 11.6585 2.65494 12.0435 3.02894C12.4615 2.88594 12.896 2.81444 13.347 2.81444C14.084 2.81444 14.766 2.99594 15.393 3.35894C16.02 3.72194 16.5205 4.21694 16.8945 4.84394C17.2795 5.47094 17.472 6.16944 17.472 6.93944C17.472 7.25844 17.428 7.60494 17.34 7.97894C17.78 8.38594 18.121 8.85894 18.363 9.39794C18.605 9.92594 18.726 10.4814 18.726 11.0644C18.726 11.6584 18.5995 12.2304 18.3465 12.7804C18.0935 13.3304 17.736 13.8089 17.274 14.2159C16.823 14.6119 16.295 14.8869 15.69 15.0409C15.569 15.6679 15.3105 16.2289 14.9145 16.7239C14.5295 17.2299 14.051 17.6259 13.479 17.9119C12.907 18.1979 12.2965 18.3409 11.6475 18.3409ZM7.57201 16.2784C8.12201 16.2784 8.60051 16.1629 9.00751 15.9319L12.1095 14.1499C12.2195 14.0729 12.2745 13.9684 12.2745 13.8364V12.4174L8.28152 14.7109C8.03952 14.8539 7.79751 14.8539 7.55552 14.7109L4.43701 12.9124C4.43701 12.9454 4.43151 12.9839 4.42051 13.0279C4.42051 13.0719 4.42051 13.1379 4.42051 13.2259C4.42051 13.7869 4.55252 14.3039 4.81651 14.7769C5.09152 15.2389 5.47101 15.6019 5.95501 15.8659C6.43901 16.1409 6.97801 16.2784 7.57201 16.2784ZM7.73701 13.5889C7.80301 13.6219 7.86351 13.6384 7.91851 13.6384C7.97351 13.6384 8.02852 13.6219 8.08352 13.5889L9.32101 12.8794L5.34451 10.5694C5.10251 10.4264 4.98151 10.2119 4.98151 9.92594V6.34544C4.43151 6.58744 3.99151 6.96144 3.66151 7.46744C3.33151 7.96244 3.16651 8.51244 3.16651 9.11744C3.16651 9.65644 3.30401 10.1734 3.57901 10.6684C3.85401 11.1634 4.21151 11.5374 4.65151 11.7904L7.73701 13.5889ZM11.6475 17.2519C12.2305 17.2519 12.7585 17.1199 13.2315 16.8559C13.7045 16.5919 14.0785 16.2289 14.3535 15.7669C14.6285 15.3049 14.766 14.7879 14.766 14.2159V10.6519C14.766 10.5199 14.711 10.4209 14.601 10.3549L13.347 9.62894V14.2324C13.347 14.5184 13.226 14.7329 12.984 14.8759L9.86551 16.6744C10.4045 17.0594 10.9985 17.2519 11.6475 17.2519ZM12.2745 11.2129V8.96894L10.41 7.91294L8.52902 8.96894V11.2129L10.41 12.2689L12.2745 11.2129ZM7.45651 5.94944C7.45651 5.66344 7.57752 5.44894 7.81952 5.30594L10.938 3.50744C10.399 3.12244 9.80502 2.92994 9.15602 2.92994C8.57302 2.92994 8.04501 3.06194 7.57201 3.32594C7.09902 3.58994 6.72502 3.95294 6.45002 4.41494C6.18602 4.87694 6.05401 5.39394 6.05401 5.96594V9.51344C6.05401 9.64544 6.10901 9.74994 6.21902 9.82694L7.45651 10.5529V5.94944ZM15.8385 13.8364C16.3885 13.5944 16.823 13.2204 17.142 12.7144C17.472 12.2084 17.637 11.6584 17.637 11.0644C17.637 10.5254 17.4995 10.0084 17.2245 9.51344C16.9495 9.01844 16.592 8.64444 16.152 8.39144L13.0665 6.60944C13.0005 6.56544 12.94 6.54894 12.885 6.55994C12.83 6.55994 12.775 6.57644 12.72 6.60944L11.4825 7.30244L15.4755 9.62894C15.5965 9.69494 15.6845 9.78294 15.7395 9.89294C15.8055 9.99194 15.8385 10.1129 15.8385 10.2559V13.8364ZM12.522 5.45444C12.764 5.30044 13.006 5.30044 13.248 5.45444L16.383 7.28594C16.383 7.20894 16.383 7.10994 16.383 6.98894C16.383 6.46094 16.251 5.96044 15.987 5.48744C15.734 5.00344 15.3655 4.61844 14.8815 4.33244C14.4085 4.04644 13.8585 3.90344 13.2315 3.90344C12.6815 3.90344 12.203 4.01894 11.796 4.24994L8.69402 6.03194C8.58402 6.10894 8.52902 6.21344 8.52902 6.34544V7.76444L12.522 5.45444Z" fill="currentColor"/>
-            </svg>
+          <div class="hero-logo-box">
+            <!-- Custom God-Level Neural Graph SVG Logo -->
+            <img src="./assets/logo.svg" alt="Local GraphRAG Logo" style="width: 100%; height: 100%;">
           </div>
-          <h1 class="hero-title">What can I help with today?</h1>
+          <h1 class="hero-title">What would you like to explore today?</h1>
 
           <!-- Starter Suggestion Cards -->
           <div class="cards-grid">
@@ -171,8 +206,8 @@
       <!-- Bottom Floating Composer -->
       <footer class="composer-container">
         <div class="composer-box" id="composerBox">
-          <!-- Attachment clip button -->
-          <button class="composer-action-btn" id="attachBtn" title="Attach PDF or DOCX file">
+          <!-- Attachment clip button (Multi-format) -->
+          <button class="composer-action-btn" id="attachBtn" title="Attach documents, presentations, or images">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
             </svg>
@@ -195,9 +230,9 @@
           </button>
         </div>
 
-        <!-- Footer Disclaimer -->
+        <!-- Clean Confident Footer Disclaimer (Replaced "ChatGPT can make mistakes") -->
         <div class="composer-disclaimer">
-          ChatGPT can make mistakes. Local Agentic GraphRAG runs 100% offline via LM Studio on AMD RX 6500M.
+          Local Agentic GraphRAG • Powered by Gemma 4 & EmbeddingGemma-2 • 100% Private & Offline
         </div>
       </footer>
 

@@ -222,7 +222,12 @@ async def upload_files(
             detail="LM Studio is not running. Please start LM Studio before uploading files.",
         )
 
-    ALLOWED_EXTENSIONS = {".pdf", ".docx", ".doc"}
+    ALLOWED_EXTENSIONS = {
+        ".pdf", ".docx", ".doc", ".pptx", ".ppt",
+        ".txt", ".md", ".csv", ".json", ".py", ".html",
+        ".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif",
+        ".mp4", ".mkv", ".mov", ".avi"
+    }
     MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
 
     accepted = []

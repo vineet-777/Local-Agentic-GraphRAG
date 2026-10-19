@@ -1,13 +1,17 @@
 /**
- * Local Agentic GraphRAG — ChatGPT / Codex Web Interface Controller
- * 100% Local, Direct REST Connection to FastAPI backend
+ * Local Agentic GraphRAG — Web Application Controller
+ * Features: Chat History (localStorage), Dark/Light Mode, PDF Export,
+ * Multi-format File Ingestion, and OpenAI o1-Style Reasoning Accordion.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
+  // ── DOM References ──────────────────────────────────────────────────────────
   const sidebar = document.getElementById('sidebar');
   const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
   const newChatBtn = document.getElementById('newChatBtn');
+  const historyList = document.getElementById('historyList');
+
+  // File Upload Elements
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
   const attachBtn = document.getElementById('attachBtn');
@@ -17,16 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressBarFill = document.getElementById('progressBarFill');
   const progressDesc = document.getElementById('progressDesc');
 
-  // Telemetry Elements
+  // Top Actions
+  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const themeIcon = document.getElementById('themeIcon');
+
+  // Telemetry Elements (Left Sidebar)
   const lmDot = document.getElementById('lmDot');
   const lmText = document.getElementById('lmText');
   const llmModelTag = document.getElementById('llmModelTag');
   const embedModelTag = document.getElementById('embedModelTag');
   const graphStats = document.getElementById('graphStats');
   const chromaStatus = document.getElementById('chromaStatus');
-  const quickStats = document.getElementById('quickStats');
 
-  // Chat Elements
+  // Chat Canvas Elements
   const chatViewport = document.getElementById('chatViewport');
   const heroView = document.getElementById('heroView');
   const messagesList = document.getElementById('messagesList');
@@ -34,10 +42,206 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendBtn = document.getElementById('sendBtn');
   const promptCards = document.querySelectorAll('.prompt-card');
 
+  // ── State Variables ────────────────────────────────────────────────────────
+  let currentSessionId = null;
   let isGenerating = false;
   let statusPollInterval = null;
 
-  // ── 1. Telemetry & Health Checks ──────────────────────────────────────────
+  const STORAGE_KEY_SESSIONS = 'graphrag_sessions';
+  const STORAGE_KEY_THEME = 'graphrag_theme';
+
+  // ── 1. Theme Toggle (Dark & Light Mode) ────────────────────────────────────
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'dark';
+    applyTheme(savedTheme);
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(STORAGE_KEY_THEME, theme);
+
+    if (theme === 'light') {
+      // Show Moon icon (click to switch to dark)
+      themeIcon.innerHTML = `
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      `;
+    } else {
+      // Show Sun icon (click to switch to light)
+      themeIcon.innerHTML = `
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      `;
+    }
+  }
+
+  themeToggleBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+
+  initTheme();
+
+  // ── 2. PDF / Report Export ────────────────────────────────────────────────
+
+  exportPdfBtn.addEventListener('click', () => {
+    // If conversation is empty, alert user
+    if (!messagesList.children || messagesList.children.length === 0) {
+      alert('Start a conversation first before exporting as PDF!');
+      return;
+    }
+    window.print();
+  });
+
+  // ── 3. Chat History Management (localStorage) ─────────────────────────────
+
+  function getSessions() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function saveSessions(sessions) {
+    localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessions));
+  }
+
+  function renderHistoryList() {
+    const sessions = getSessions();
+    historyList.innerHTML = '';
+
+    if (sessions.length === 0) {
+      historyList.innerHTML = `
+        <div style="font-size: 0.74rem; color: var(--text-muted); padding: 6px 10px;">
+          No conversations yet
+        </div>
+      `;
+      return;
+    }
+
+    sessions.forEach(sess => {
+      const item = document.createElement('div');
+      item.className = `history-item ${sess.id === currentSessionId ? 'active' : ''}`;
+      item.setAttribute('data-id', sess.id);
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'history-title';
+      titleSpan.textContent = sess.title || 'Conversation';
+      titleSpan.title = sess.title || 'Conversation';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'history-delete-btn';
+      deleteBtn.title = 'Delete conversation';
+      deleteBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      `;
+
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteSession(sess.id);
+      });
+
+      item.addEventListener('click', () => {
+        loadSession(sess.id);
+      });
+
+      item.appendChild(titleSpan);
+      item.appendChild(deleteBtn);
+      historyList.appendChild(item);
+    });
+  }
+
+  function createNewSession() {
+    currentSessionId = 'sess_' + Date.now();
+    messagesList.innerHTML = '';
+    messagesList.style.display = 'none';
+    heroView.style.display = 'flex';
+    queryInput.value = '';
+    adjustTextareaHeight();
+    updateSendBtnState();
+    renderHistoryList();
+    queryInput.focus();
+  }
+
+  function deleteSession(id) {
+    let sessions = getSessions().filter(s => s.id !== id);
+    saveSessions(sessions);
+    if (currentSessionId === id) {
+      createNewSession();
+    } else {
+      renderHistoryList();
+    }
+  }
+
+  function loadSession(id) {
+    const sessions = getSessions();
+    const session = sessions.find(s => s.id === id);
+    if (!session) return;
+
+    currentSessionId = session.id;
+    messagesList.innerHTML = '';
+
+    if (session.messages && session.messages.length > 0) {
+      heroView.style.display = 'none';
+      messagesList.style.display = 'flex';
+
+      session.messages.forEach(msg => {
+        if (msg.role === 'user') {
+          appendUserMessage(msg.content, false);
+        } else {
+          appendAssistantMessage(msg.content, msg.route, msg.trace, msg.seconds || 2, false);
+        }
+      });
+      scrollToBottom();
+    } else {
+      messagesList.style.display = 'none';
+      heroView.style.display = 'flex';
+    }
+
+    renderHistoryList();
+  }
+
+  function saveCurrentMessage(role, content, route = null, trace = null, seconds = 0) {
+    let sessions = getSessions();
+    let session = sessions.find(s => s.id === currentSessionId);
+
+    if (!session) {
+      session = {
+        id: currentSessionId,
+        title: content.slice(0, 32).trim() + (content.length > 32 ? '...' : ''),
+        timestamp: Date.now(),
+        messages: [],
+      };
+      sessions.unshift(session);
+    }
+
+    session.messages.push({ role, content, route, trace, seconds });
+    saveSessions(sessions);
+    renderHistoryList();
+  }
+
+  newChatBtn.addEventListener('click', createNewSession);
+
+  // Initialize with new session or latest
+  const existingSessions = getSessions();
+  if (existingSessions.length > 0) {
+    loadSession(existingSessions[0].id);
+  } else {
+    createNewSession();
+  }
+
+  // ── 4. Telemetry Checks (LM Studio & Knowledge Graph) ─────────────────────
 
   async function fetchHealth() {
     try {
@@ -50,21 +254,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (lm.running) {
         lmDot.className = 'dot online';
-        lmText.textContent = 'Connected (1234)';
+        lmText.textContent = 'Connected (:1234)';
         llmModelTag.textContent = lm.configured_llm_model ? lm.configured_llm_model.split('/').pop() : 'gemma-4-e4b';
         embedModelTag.textContent = lm.configured_embed_model ? `${lm.configured_embed_model.split('/').pop()} (${lm.embedding_dim || 768}d)` : 'embeddinggemma-2';
       } else {
         lmDot.className = 'dot offline';
-        lmText.textContent = 'Disconnected';
+        lmText.textContent = 'Offline';
       }
 
       const nodes = db.graph_nodes || 0;
       const edges = db.graph_edges || 0;
       graphStats.textContent = `${nodes} nodes • ${edges} edges`;
-      quickStats.textContent = `${nodes} Nodes • ${edges} Edges`;
-
       chromaStatus.textContent = db.chromadb_exists ? 'Indexed (Ready)' : 'Empty';
-    } catch (err) {
+    } catch {
       lmDot.className = 'dot offline';
       lmText.textContent = 'Offline';
     }
@@ -73,23 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchHealth();
   setInterval(fetchHealth, 10000);
 
-  // ── 2. Sidebar Navigation ─────────────────────────────────────────────────
+  // ── 5. Sidebar Toggle & Shortcuts ─────────────────────────────────────────
 
   toggleSidebarBtn.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
   });
 
-  newChatBtn.addEventListener('click', () => {
-    messagesList.innerHTML = '';
-    messagesList.style.display = 'none';
-    heroView.style.display = 'flex';
-    queryInput.value = '';
-    adjustTextareaHeight();
-    updateSendBtnState();
-    queryInput.focus();
-  });
-
-  // Shortcut Ctrl+B for sidebar, Ctrl+K for new chat
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
       e.preventDefault();
@@ -97,11 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      newChatBtn.click();
+      createNewSession();
     }
   });
 
-  // ── 3. File Upload & Ingestion ─────────────────────────────────────────────
+  // ── 6. Multi-Format File Ingestion (PDF, DOCX, PPTX, Images, Video) ───────
 
   dropzone.addEventListener('click', () => fileInput.click());
   attachBtn.addEventListener('click', () => fileInput.click());
@@ -142,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
       progressStage.textContent = 'Uploading...';
       progressPercent.textContent = '0%';
       progressBarFill.style.width = '5%';
-      progressDesc.textContent = `Uploading ${files.length} file(s) to server...`;
+      progressDesc.textContent = `Uploading ${files.length} file(s)...`;
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -150,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err.detail || 'Upload failed');
       }
 
@@ -195,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             progressStage.textContent = 'COMPLETE';
             progressPercent.textContent = '100%';
             progressBarFill.style.width = '100%';
-            progressDesc.textContent = 'Knowledge Graph & Vector Embeddings updated!';
+            progressDesc.textContent = 'Knowledge Graph & Embeddings updated!';
             fetchHealth();
           }
 
@@ -204,13 +395,13 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBarFill.style.background = '';
           }, 4000);
         }
-      } catch (err) {
-        // Silent catch for poll error
+      } catch {
+        // Silent catch
       }
     }, 800);
   }
 
-  // ── 4. Chat Composition & Sending ──────────────────────────────────────────
+  // ── 7. Composer & Sending Logic ───────────────────────────────────────────
 
   function updateSendBtnState() {
     const hasText = queryInput.value.trim().length > 0;
@@ -257,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── 5. Query Handling & Reasoning Trace ────────────────────────────────────
+  // ── 8. Query Submission & Reasoning Accordion ─────────────────────────────
 
   async function handleUserSubmit(query) {
     if (!query || isGenerating) return;
@@ -267,19 +458,18 @@ document.addEventListener('DOMContentLoaded', () => {
     adjustTextareaHeight();
     updateSendBtnState();
 
-    // Show conversation canvas
     heroView.style.display = 'none';
     messagesList.style.display = 'flex';
 
-    // Render User Message
-    appendUserMessage(query);
+    // Append and save user message
+    appendUserMessage(query, true);
 
-    // Prepare Assistant Placeholder with o1 Thinking Accordion
+    // Create Assistant Row
     const { assistantRow, thinkingSummary, thinkingDetails, bodyEl } = createAssistantRow();
     messagesList.appendChild(assistantRow);
     scrollToBottom();
 
-    // Start timer for o1 thinking
+    // Start thinking timer
     isGenerating = true;
     updateSendBtnState();
     const startTime = Date.now();
@@ -310,12 +500,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
 
-      // Finalize o1 Thinking Accordion
+      // Render Thinking Trace
       renderThinkingTrace(thinkingSummary, thinkingDetails, data.route, data.reasoning_trace, totalSeconds);
 
-      // Render Markdown Response
+      // Render Response
       bodyEl.innerHTML = formatMarkdown(data.response || 'No response returned.');
       setupCodeCopyButtons(bodyEl);
+
+      // Save to chat session history
+      saveCurrentMessage('assistant', data.response, data.route, data.reasoning_trace, totalSeconds);
 
     } catch (err) {
       clearInterval(timerInterval);
@@ -335,11 +528,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function appendUserMessage(text) {
+  function appendUserMessage(text, shouldSave = false) {
     const row = document.createElement('div');
     row.className = 'message-row user';
     row.innerHTML = `<div class="user-bubble">${escapeHtml(text)}</div>`;
     messagesList.appendChild(row);
+    if (shouldSave) {
+      saveCurrentMessage('user', text);
+    }
+  }
+
+  function appendAssistantMessage(content, route, trace, seconds = 2, shouldSave = false) {
+    const { assistantRow, thinkingSummary, thinkingDetails, bodyEl } = createAssistantRow();
+    renderThinkingTrace(thinkingSummary, thinkingDetails, route, trace, seconds);
+    bodyEl.innerHTML = formatMarkdown(content);
+    setupCodeCopyButtons(bodyEl);
+    messagesList.appendChild(assistantRow);
+    if (shouldSave) {
+      saveCurrentMessage('assistant', content, route, trace, seconds);
+    }
   }
 
   function createAssistantRow() {
@@ -348,11 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const avatar = document.createElement('div');
     avatar.className = 'assistant-avatar';
-    avatar.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11.6475 18.3409C11.0975 18.3409 10.575 18.2364 10.08 18.0274C9.58502 17.8184 9.14502 17.5269 8.76002 17.1529C8.34202 17.2959 7.90751 17.3674 7.45651 17.3674C6.71951 17.3674 6.03751 17.1859 5.41051 16.8229C4.78351 16.4599 4.27751 15.9649 3.89251 15.3379C3.51851 14.7109 3.33151 14.0124 3.33151 13.2424C3.33151 12.9234 3.37551 12.5769 3.46351 12.2029C3.02351 11.7959 2.68251 11.3284 2.44051 10.8004C2.19851 10.2614 2.07751 9.70044 2.07751 9.11744C2.07751 8.52344 2.20401 7.95144 2.45701 7.40144C2.71001 6.85144 3.06201 6.37844 3.51301 5.98244C3.97501 5.57544 4.50851 5.29494 5.11351 5.14094C5.23451 4.51394 5.48751 3.95294 5.87251 3.45794C6.26851 2.95194 6.75252 2.55594 7.32452 2.26994C7.89652 1.98394 8.50702 1.84094 9.15602 1.84094C9.70602 1.84094 10.2285 1.94544 10.7235 2.15444C11.2185 2.36344 11.6585 2.65494 12.0435 3.02894C12.4615 2.88594 12.896 2.81444 13.347 2.81444C14.084 2.81444 14.766 2.99594 15.393 3.35894C16.02 3.72194 16.5205 4.21694 16.8945 4.84394C17.2795 5.47094 17.472 6.16944 17.472 6.93944C17.472 7.25844 17.428 7.60494 17.34 7.97894C17.78 8.38594 18.121 8.85894 18.363 9.39794C18.605 9.92594 18.726 10.4814 18.726 11.0644C18.726 11.6584 18.5995 12.2304 18.3465 12.7804C18.0935 13.3304 17.736 13.8089 17.274 14.2159C16.823 14.6119 16.295 14.8869 15.69 15.0409C15.569 15.6679 15.3105 16.2289 14.9145 16.7239C14.5295 17.2299 14.051 17.6259 13.479 17.9119C12.907 18.1979 12.2965 18.3409 11.6475 18.3409Z" fill="currentColor"/>
-      </svg>
-    `;
+    avatar.innerHTML = `<img src="./assets/logo.svg" alt="AI" style="width: 28px; height: 28px;">`;
 
     const assistantContent = document.createElement('div');
     assistantContent.className = 'assistant-body';
@@ -402,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
-        <span>Thought for ${seconds} seconds</span>
+        <span>Thought for ${seconds}s</span>
         <span class="route-tag ${routeClass}">${routeLabel}</span>
       </div>
       <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -411,14 +614,14 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     if (!trace || trace.length === 0) {
-      detailsEl.innerHTML = `<div style="color: var(--text-muted);">Direct synthesis executed with router classification.</div>`;
+      detailsEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.76rem;">Direct multi-hop traversal with router node classification.</div>`;
       return;
     }
 
     let html = '';
     trace.forEach((step, idx) => {
       const stepName = step.step || `Step ${idx + 1}`;
-      const details = step.details || step.content || JSON.stringify(step);
+      const details = step.details || step.description || step.content || JSON.stringify(step);
       html += `
         <div class="trace-step">
           <span style="color: var(--openai-green); font-weight: 600;">▸</span>
@@ -432,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsEl.innerHTML = html;
   }
 
-  // ── 6. Markdown Parser & Code Formatting ───────────────────────────────────
+  // ── 9. Markdown Parser & Code Formatting ───────────────────────────────────
 
   function formatMarkdown(md) {
     if (!md) return '';
@@ -440,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Code blocks with syntax badge and copy button
     md = md.replace(/```([a-zA-Z0-9_\-\+]*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'code';
-      return `<pre><div style="display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); font-size:0.75rem; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:4px;"><span>${language}</span><button class="copy-code-btn" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; font-size:0.73rem;">Copy code</button></div><code>${escapeHtml(code.trim())}</code></pre>`;
+      return `<pre><div style="display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); font-size:0.75rem; margin-bottom:8px; border-bottom:1px solid rgba(125,125,125,0.15); padding-bottom:4px;"><span>${language}</span><button class="copy-code-btn" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; font-size:0.73rem;">Copy code</button></div><code>${escapeHtml(code.trim())}</code></pre>`;
     });
 
     // Inline code
