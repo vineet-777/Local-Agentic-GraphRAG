@@ -19,6 +19,14 @@
           <img src="./assets/logo.svg" alt="GraphRAG Logo" class="brand-logo">
           <span class="brand-name">GraphRAG</span>
         </div>
+        <div class="profile-row">
+          <span class="profile-tag">Profile:</span>
+          <select id="profileSelect" class="profile-select" title="Switch User Profile">
+            <option value="Default">Default User</option>
+            <option value="Researcher">Researcher</option>
+            <option value="Academic">Academic</option>
+          </select>
+        </div>
         <button class="new-chat-btn" id="newChatBtn" title="Start new conversation (Ctrl+K)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -63,6 +71,10 @@
               <span>ChromaDB</span>
               <span class="telem-val" id="chromaStatus" style="color: var(--openai-green); font-weight: 600;">Indexed (Ready)</span>
             </div>
+            <div class="telem-row">
+              <span>Neo4j Dual-Graph</span>
+              <span class="telem-val" id="neo4jStatus" style="color: var(--text-muted); font-weight: 500;">Checking...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -92,8 +104,30 @@
           </div>
         </div>
 
-        <!-- Top Right Header: ONLY Theme Toggle (Zero PDF buttons!) -->
+        <!-- Top Right Header: 3D Graph, Share, and Theme Toggle -->
         <div class="header-right">
+          <!-- 3D Knowledge Graph Visualizer Button -->
+          <button class="header-action-pill" id="graphModalBtn" title="Interactive 3D Knowledge Graph Visualizer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>3D Graph</span>
+          </button>
+
+          <!-- Share Conversation Button -->
+          <button class="icon-btn" id="shareChatBtn" title="Share / Export Conversation">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+          </button>
+
+          <!-- Dark / Light Theme Toggle -->
           <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode">
             <svg id="themeIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="5"></circle>
@@ -203,6 +237,54 @@
     </main>
   </div>
 
-  <script src="./app.js?v=2.2"></script>
+  <!-- ── Interactive 3D Knowledge Graph Modal ─────────────────────────────── -->
+  <div class="graph-modal" id="graphModal" style="display: none;">
+    <div class="graph-modal-backdrop" id="graphModalBackdrop"></div>
+    <div class="graph-modal-container">
+      <div class="graph-modal-header">
+        <div class="graph-modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span>Interactive 3D Knowledge Graph</span>
+          <span class="graph-modal-badge" id="graphModalBadge">347 Nodes • 245 Edges</span>
+        </div>
+        <div class="graph-modal-actions">
+          <input type="text" id="graphSearchInput" placeholder="Filter entities (e.g. GraphRAG, Chroma)..." class="graph-search-input">
+          <button class="modal-control-btn" id="graphAutoRotateBtn" title="Toggle Auto-Rotation">Auto-Rotate: ON</button>
+          <button class="modal-control-btn" id="graphResetBtn" title="Reset Camera">Center View</button>
+          <button class="icon-btn" id="graphCloseBtn" title="Close Modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="graph-canvas-wrapper" id="graphCanvasWrapper">
+        <canvas id="graph3dCanvas"></canvas>
+        <div class="graph-node-inspector" id="nodeInspector" style="display: none;">
+          <div class="inspector-header">
+            <span class="inspector-title" id="inspectNodeName">Entity Details</span>
+            <button class="icon-btn" id="closeInspectorBtn">✕</button>
+          </div>
+          <div class="inspector-body" id="inspectNodeDetails"></div>
+        </div>
+        <div class="graph-controls-hint">
+          <span>🖱️ Left-Click + Drag: 3D Orbit</span> • 
+          <span>📜 Wheel: Zoom</span> • 
+          <span>🎯 Click Node: Inspect Triples</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./graph3d.js?v=2.3"></script>
+  <script src="./app.js?v=2.3"></script>
 </body>
 </html>

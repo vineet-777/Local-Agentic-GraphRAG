@@ -20,6 +20,7 @@ from core.config import (
     client,
     EXTRACTION_MAX_TOKENS,
 )
+from core.neo4j_engine import neo4j_engine
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -209,6 +210,8 @@ def build_graph_from_chunks(chunks: list[Document], source_file: str) -> dict:
     if all_triples:
         graph = merge_triples_into_graph(all_triples, source_file, graph)
         save_graph(graph)
+        if neo4j_engine.is_connected():
+            neo4j_engine.sync_triples(all_triples)
 
     stats["nodes_added"] = len(graph["nodes"]) - initial_nodes
     stats["edges_added"] = len(graph["edges"]) - initial_edges

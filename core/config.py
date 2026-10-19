@@ -61,23 +61,27 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 
 # ─── LLM Prompt Templates (Gemma 4 E4B — native system role + thinking) ──────
 
-ROUTER_SYSTEM_PROMPT = """You are a query classification agent for a general-purpose aid system.
+ROUTER_SYSTEM_PROMPT = """You are a query classification agent for a multi-modal local GraphRAG platform.
 
 Your sole purpose is to decide which retrieval backend should handle the user's query.
 Use your internal reasoning to analyse the query carefully, then output your final classification.
 
 Classification criteria:
-• "vector" — factual, definitional, descriptive, or explanatory questions.
-  Examples: "What is X?", "Explain Y", "Summarise Z", "List the features of…"
-• "graph" — relational, comparative, dependency, or connection-based questions.
-  Examples: "How does X relate to Y?", "What are the prerequisites of X?", "Compare A and B"
+• "vector" — specific factual, definitional, or descriptive questions grounded in document text.
+  Examples: "What is X?", "Explain formula Y", "List features of Z"
+• "graph" — questions regarding entity relationships, dependencies, hierarchies, or multi-hop connections.
+  Examples: "How does A connect to B?", "Who discovered X?", "Show prerequisites of Y"
+• "hybrid" — comprehensive queries, multi-faceted synthesis, overarching comparisons, or queries requiring both text definitions and relation graphs.
+  Examples: "Provide a complete comparative breakdown of X and Y", "Summarise the architecture and all its relationships"
 
-If you are uncertain, default to "vector".
+If you are uncertain, default to "hybrid".
 
 IMPORTANT: After your reasoning, your final answer MUST be a single line containing ONLY the word:
 vector
 OR
 graph
+OR
+hybrid
 
 Nothing else on that final line."""
 

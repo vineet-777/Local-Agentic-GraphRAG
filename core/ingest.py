@@ -28,12 +28,66 @@ from core.retrievers import LMStudioEmbeddings
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def extract_text_from_pdf(file_path: Path) -> list[Document]:
-    """Extract text from a PDF file, one Document per page."""
-    from pypdf import PdfReader
-
-    reader = PdfReader(str(file_path))
+    """
+    Extract text, structured tables, and OCR from a PDF file.
+    Uses pdfplumber for table parsing and pypdf as fallback.
+    """
     documents = []
 
+    # Attempt high-fidelity table and text extraction with pdfplumber
+    try:
+        import pdfplumber
+        with pdfplumber.open(str(file_path)) as pdf:
+            total_pages = len(pdf.pages)
+            for i, page in enumerate(pdf.pages):
+                page_text = page.extract_text() or ""
+                
+                # Extract and format tables into Markdown
+                tables = page.extract_tables()
+                if tables:
+                    table_mds = []
+                    for t in tables:
+                        if t and len(t) > 0:
+                            header = [str(col or "").strip().replace("\n", " ") for col in t[0]]
+                            sep = ["---"] * len(header)
+                            rows = []
+                            for row in t[1:]:
+                                row_str = " | ".join(str(cell or "").strip().replace("\n", " ") for cell in row)
+                                rows.append(f"| {row_str} |")
+                            table_mds.append(f"| {' | '.join(header)} |\n| {' | '.join(sep)} |\n" + "\n".join(rows))
+                    if table_mds:
+                        page_text += "\n\n### Extracted Tables:\n" + "\n\n".join(table_mds)
+
+                # Fallback: if page has no selectable text (scanned page), attempt OCR
+                if not page_text.strip():
+                    try:
+                        import pytesseract
+                        img = page.to_image(resolution=150).original
+                        ocr_txt = pytesseract.image_to_string(img).strip()
+                        if ocr_txt:
+                            page_text = f"[OCR Text from Scanned Page]:\n{ocr_txt}"
+                    except Exception:
+                        pass
+
+                if page_text.strip():
+                    documents.append(Document(
+                        page_content=page_text.strip(),
+                        metadata={
+                            "source": file_path.name,
+                            "page": i + 1,
+                            "total_pages": total_pages,
+                            "file_type": "pdf",
+                        },
+                    ))
+
+        if documents:
+            return documents
+    except Exception:
+        pass  # Fall back to pypdf
+
+    # Fallback to standard pypdf
+    from pypdf import PdfReader
+    reader = PdfReader(str(file_path))
     for i, page in enumerate(reader.pages):
         text = page.extract_text()
         if text and text.strip():
@@ -137,7 +191,7 @@ def extract_text_from_plain(file_path: Path) -> list[Document]:
 
 
 def extract_text_from_image(file_path: Path) -> list[Document]:
-    """Extract metadata, EXIF, and descriptions from images for multimodal indexing."""
+    """Extract metadata, EXIF, and real-time OCR text from images for multimodal indexing."""
     from PIL import Image
     info_lines = [f"Image File: {file_path.name}"]
     try:
@@ -150,6 +204,15 @@ def extract_text_from_image(file_path: Path) -> list[Document]:
                 items = [f"{k}: {v}" for k, v in exif.items() if isinstance(v, (str, int, float))]
                 if items:
                     info_lines.append(f"EXIF Metadata: {', '.join(items[:8])}")
+
+            # Real-Time OCR text extraction
+            try:
+                import pytesseract
+                ocr_text = pytesseract.image_to_string(img).strip()
+                if ocr_text:
+                    info_lines.append(f"\n[OCR Text Content Extracted from Image]:\n{ocr_text}")
+            except Exception:
+                pass
     except Exception as e:
         info_lines.append(f"Image read info: {e}")
 

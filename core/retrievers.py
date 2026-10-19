@@ -25,6 +25,7 @@ from core.config import (
     CHROMA_COLLECTION,
     client,
 )
+from core.neo4j_engine import neo4j_engine
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -235,6 +236,18 @@ class GraphRetriever:
             w.lower() for w in re.split(r'\W+', text)
             if len(w) > 2
         ]
+        if not keywords:
+            return []
+
+        # ── 1. Enterprise Neo4j Cypher Traversal (if connected) ─────────────
+        if neo4j_engine.is_connected():
+            neo_triples = neo4j_engine.multi_hop_query(keywords, max_hops=max_hops)
+            if neo_triples:
+                return neo_triples
+
+        # ── 2. Local In-Memory Graph Fallback ────────────────────────────────
+        if not self._graph.get("nodes"):
+            return []
 
         # Find matching nodes
         matched_node_ids = set()
@@ -268,6 +281,7 @@ class GraphRetriever:
                             "target": target_node.get("label", edge["target"]),
                             "source_type": source_node.get("type", ""),
                             "target_type": target_node.get("type", ""),
+                            "hops": hop + 1,
                         })
 
                         # Expand frontier for next hop
@@ -285,10 +299,71 @@ class GraphRetriever:
 
         lines = []
         for t in triples:
-            src_type = f" [{t['source_type']}]" if t['source_type'] else ""
-            tgt_type = f" [{t['target_type']}]" if t['target_type'] else ""
+            src_type = f" [{t.get('source_type', '')}]" if t.get('source_type') else ""
+            tgt_type = f" [{t.get('target_type', '')}]" if t.get('target_type') else ""
+            hops_info = f" (Hops: {t.get('hops', 1)})" if "hops" in t else ""
             lines.append(
-                f"• {t['source']}{src_type}  —({t['relation']})→  {t['target']}{tgt_type}"
+                f"• {t['source']}{src_type}  —({t['relation']})→  {t['target']}{tgt_type}{hops_info}"
             )
 
         return "Knowledge Graph Relationships:\n" + "\n".join(lines)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  HYBRID RAG FUSION — Reciprocal Rank Fusion (RRF)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def reciprocal_rank_fusion(
+    vector_docs: list[Document],
+    graph_triples: list[dict],
+    k: int = 60,
+    max_tokens: int = 2500,
+) -> str:
+    """
+    Combines Vector Search (ChromaDB) and Knowledge Graph traversal (Neo4j / In-Memory)
+    using Reciprocal Rank Fusion (RRF). Produces a unified, ranked evidence block.
+    
+    RRF Score formula:
+        RRF_Score(d) = sum( 1 / (k + rank) )
+    """
+    scored_items = []
+
+    # 1. Rank vector documents
+    for rank, doc in enumerate(vector_docs, 1):
+        score = 1.0 / (k + rank)
+        source = doc.metadata.get("source", "Unknown")
+        page = doc.metadata.get("page", "?")
+        content = (
+            f"[Passage Evidence - Rank {rank} | Source: {source}, Page: {page}]\n"
+            f"{doc.page_content.strip()}"
+        )
+        scored_items.append({"score": score, "text": content, "type": "vector"})
+
+    # 2. Rank graph relationships (higher priority for 1-hop direct relationships)
+    for rank, t in enumerate(graph_triples[:15], 1):
+        hop_penalty = t.get("hops", 1)
+        score = (1.0 / (k + rank)) * (1.0 / hop_penalty)
+        content = (
+            f"[Graph Relationship Evidence - Rank {rank}]\n"
+            f"• {t['source']}  —({t['relation']})→  {t['target']}"
+        )
+        scored_items.append({"score": score, "text": content, "type": "graph"})
+
+    # 3. Sort all evidence descending by RRF score
+    scored_items.sort(key=lambda x: x["score"], reverse=True)
+
+    # 4. Assemble fused context block
+    sections = []
+    current_len = 0
+    for item in scored_items:
+        text = item["text"]
+        if current_len + len(text) > max_tokens * 4:  # Rough character budget
+            break
+        sections.append(text)
+        current_len += len(text)
+
+    if not sections:
+        return "No sufficient context retrieved from vector or graph stores."
+
+    return "=== HYBRID FUSED RETRIEVAL CONTEXT (Vector + Knowledge Graph) ===\n\n" + "\n\n---\n\n".join(sections)
+

@@ -1,8 +1,14 @@
 /**
- * Local Agentic GraphRAG — Web Application Controller
- * Features: Chat History (localStorage), Dark/Light Mode,
- * Bottom Paperclip Multi-format Ingestion, Docked Left Telemetry,
- * and OpenAI o1-Style Reasoning Accordion.
+ * Local Agentic GraphRAG — God-Level Web Application Controller
+ * Features:
+ * - Multi-Turn Conversation Memory (past turns sent for contextual follow-up)
+ * - Server-Sent Events (SSE) Live Token Streaming with Typewriter Effect
+ * - Real-Time o1-Style Collapsible Reasoning Trace Updates
+ * - Interactive 3D WebGL Knowledge Graph Visualizer Modal
+ * - Local Multi-Profile Session Isolation (Default / Researcher / Academic)
+ * - One-Click Conversation Share & Export Engine
+ * - Neo4j Enterprise Dual-Graph Engine Telemetry
+ * - Bottom Paperclip Multi-Format Document Ingestion with Floating Progress
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
   const newChatBtn = document.getElementById('newChatBtn');
   const historyList = document.getElementById('historyList');
+  const profileSelect = document.getElementById('profileSelect');
 
   // File Upload Elements (Paperclip in Bottom Composer)
   const fileInput = document.getElementById('fileInput');
@@ -21,17 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressBarFill = document.getElementById('progressBarFill');
   const progressDesc = document.getElementById('progressDesc');
 
-  // Theme Toggle Button
+  // Header Actions
+  const graphModalBtn = document.getElementById('graphModalBtn');
+  const shareChatBtn = document.getElementById('shareChatBtn');
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   const themeIcon = document.getElementById('themeIcon');
 
-  // Docked Left Telemetry Elements (Bottom of Sidebar)
+  // Telemetry Elements (Bottom of Sidebar)
   const lmDot = document.getElementById('lmDot');
   const lmText = document.getElementById('lmText');
   const llmModelTag = document.getElementById('llmModelTag');
   const embedModelTag = document.getElementById('embedModelTag');
   const graphStats = document.getElementById('graphStats');
   const chromaStatus = document.getElementById('chromaStatus');
+  const neo4jStatus = document.getElementById('neo4jStatus');
 
   // Chat Canvas Elements
   const chatViewport = document.getElementById('chatViewport');
@@ -41,13 +51,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendBtn = document.getElementById('sendBtn');
   const promptCards = document.querySelectorAll('.prompt-card');
 
+  // 3D Graph Modal Elements
+  const graphModal = document.getElementById('graphModal');
+  const graphCloseBtn = document.getElementById('graphCloseBtn');
+  const graphModalBackdrop = document.getElementById('graphModalBackdrop');
+  const graphSearchInput = document.getElementById('graphSearchInput');
+  const graphResetBtn = document.getElementById('graphResetBtn');
+  const graphAutoRotateBtn = document.getElementById('graphAutoRotateBtn');
+  const closeInspectorBtn = document.getElementById('closeInspectorBtn');
+  const nodeInspector = document.getElementById('nodeInspector');
+
   // ── State Variables ────────────────────────────────────────────────────────
   let currentSessionId = null;
   let isGenerating = false;
   let statusPollInterval = null;
+  let graph3dInstance = null;
 
-  const STORAGE_KEY_SESSIONS = 'graphrag_sessions';
+  const STORAGE_KEY_PROFILE = 'graphrag_current_profile';
   const STORAGE_KEY_THEME = 'graphrag_theme';
+  let currentProfile = localStorage.getItem(STORAGE_KEY_PROFILE) || 'Default';
+
+  function getSessionsKey() {
+    return `graphrag_sessions_${currentProfile}`;
+  }
 
   // ── 1. Theme Toggle (Dark & Light Mode) ────────────────────────────────────
 
@@ -86,18 +112,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initTheme();
 
-  // ── 2. Chat History Management (localStorage) ─────────────────────────────
+  // ── 2. Local Multi-Profile Switcher ───────────────────────────────────────
+
+  if (profileSelect) {
+    profileSelect.value = currentProfile;
+    profileSelect.addEventListener('change', () => {
+      currentProfile = profileSelect.value;
+      localStorage.setItem(STORAGE_KEY_PROFILE, currentProfile);
+      currentSessionId = null;
+      renderHistoryList();
+      showHeroView();
+    });
+  }
+
+  // ── 3. Chat History Management (localStorage) ─────────────────────────────
 
   function getSessions() {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY_SESSIONS) || '[]');
+      return JSON.parse(localStorage.getItem(getSessionsKey()) || '[]');
     } catch {
       return [];
     }
   }
 
   function saveSessions(sessions) {
-    localStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(sessions));
+    localStorage.setItem(getSessionsKey(), JSON.stringify(sessions));
   }
 
   function renderHistoryList() {
@@ -106,8 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (sessions.length === 0) {
       historyList.innerHTML = `
-        <div style="font-size: 0.74rem; color: var(--text-muted); padding: 6px 10px;">
-          No conversations yet
+        <div style="font-size: 0.74rem; color: var(--text-muted); padding: 8px 10px;">
+          No conversations in "${currentProfile}" profile
         </div>
       `;
       return;
@@ -149,25 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function createNewSession() {
-    currentSessionId = 'sess_' + Date.now();
-    messagesList.innerHTML = '';
-    messagesList.style.display = 'none';
-    heroView.style.display = 'flex';
-    queryInput.value = '';
-    adjustTextareaHeight();
-    updateSendBtnState();
+    currentSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    showHeroView();
     renderHistoryList();
-    queryInput.focus();
-  }
-
-  function deleteSession(id) {
-    let sessions = getSessions().filter(s => s.id !== id);
-    saveSessions(sessions);
-    if (currentSessionId === id) {
-      createNewSession();
-    } else {
-      renderHistoryList();
-    }
+    if (queryInput) queryInput.focus();
   }
 
   function loadSession(id) {
@@ -175,59 +199,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const session = sessions.find(s => s.id === id);
     if (!session) return;
 
-    currentSessionId = session.id;
-    messagesList.innerHTML = '';
+    currentSessionId = id;
+    renderHistoryList();
 
-    if (session.messages && session.messages.length > 0) {
-      heroView.style.display = 'none';
-      messagesList.style.display = 'flex';
-
-      session.messages.forEach(msg => {
-        if (msg.role === 'user') {
-          appendUserMessage(msg.content, false);
-        } else {
-          appendAssistantMessage(msg.content, msg.route, msg.trace, msg.seconds || 2, false);
-        }
-      });
-      scrollToBottom();
-    } else {
-      messagesList.style.display = 'none';
-      heroView.style.display = 'flex';
+    if (!session.messages || session.messages.length === 0) {
+      showHeroView();
+      return;
     }
 
-    renderHistoryList();
+    heroView.style.display = 'none';
+    messagesList.style.display = 'flex';
+    messagesList.innerHTML = '';
+
+    session.messages.forEach(msg => {
+      if (msg.role === 'user') {
+        appendUserMessage(msg.text, false);
+      } else {
+        appendAssistantMessage(msg.text, msg.reasoningTrace, msg.route, false);
+      }
+    });
+
+    scrollToBottom();
   }
 
-  function saveCurrentMessage(role, content, route = null, trace = null, seconds = 0) {
+  function deleteSession(id) {
+    let sessions = getSessions();
+    sessions = sessions.filter(s => s.id !== id);
+    saveSessions(sessions);
+
+    if (currentSessionId === id) {
+      createNewSession();
+    } else {
+      renderHistoryList();
+    }
+  }
+
+  function saveMessageToCurrentSession(role, text, reasoningTrace = null, route = null) {
     let sessions = getSessions();
     let session = sessions.find(s => s.id === currentSessionId);
 
     if (!session) {
       session = {
         id: currentSessionId,
-        title: content.slice(0, 32).trim() + (content.length > 32 ? '...' : ''),
-        timestamp: Date.now(),
+        title: text.slice(0, 36) + (text.length > 36 ? '...' : ''),
+        createdAt: new Date().toISOString(),
+        profile: currentProfile,
         messages: [],
       };
       sessions.unshift(session);
     }
 
-    session.messages.push({ role, content, route, trace, seconds });
+    session.messages.push({
+      role,
+      text,
+      reasoningTrace,
+      route,
+      timestamp: new Date().toISOString(),
+    });
+
     saveSessions(sessions);
     renderHistoryList();
   }
 
-  newChatBtn.addEventListener('click', createNewSession);
-
-  // Initialize with latest session or new
-  const existingSessions = getSessions();
-  if (existingSessions.length > 0) {
-    loadSession(existingSessions[0].id);
-  } else {
-    createNewSession();
+  function showHeroView() {
+    messagesList.innerHTML = '';
+    messagesList.style.display = 'none';
+    heroView.style.display = 'flex';
   }
 
-  // ── 3. Docked Left Telemetry Checks (LM Studio & Knowledge Graph) ─────────
+  newChatBtn.addEventListener('click', () => {
+    createNewSession();
+  });
+
+  createNewSession();
+
+  // ── 4. Telemetry Checks (LM Studio, ChromaDB, Neo4j) ──────────────────────
 
   async function fetchHealth() {
     try {
@@ -237,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const lm = data.lm_studio || {};
       const db = data.database || {};
+      const neo = data.neo4j || {};
 
       if (lm.running) {
         lmDot.className = 'dot online';
@@ -252,6 +299,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const edges = db.graph_edges || 0;
       graphStats.textContent = `${nodes} nodes • ${edges} edges`;
       chromaStatus.textContent = db.chromadb_exists ? 'Indexed (Ready)' : 'Empty';
+
+      if (neo4jStatus) {
+        if (neo.connected) {
+          neo4jStatus.style.color = 'var(--openai-green)';
+          neo4jStatus.textContent = `Connected (:7687)`;
+        } else {
+          neo4jStatus.style.color = 'var(--text-muted)';
+          neo4jStatus.textContent = 'In-Memory (Dual-Mode)';
+        }
+      }
     } catch {
       lmDot.className = 'dot offline';
       lmText.textContent = 'Offline';
@@ -261,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchHealth();
   setInterval(fetchHealth, 10000);
 
-  // ── 4. Sidebar Toggle & Shortcuts ─────────────────────────────────────────
+  // ── 5. Sidebar Toggle & Keyboard Shortcuts ────────────────────────────────
 
   toggleSidebarBtn.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
@@ -278,70 +335,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── 5. Multi-Format Upload (Only Paperclip in Bottom Composer) ─────────────
+  // ── 6. Multi-Format Paperclip Ingestion ────────────────────────────────────
 
   attachBtn.addEventListener('click', () => fileInput.click());
 
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
-      uploadFiles(fileInput.files);
+      handleFileUpload(fileInput.files);
     }
   });
 
-  // Also support drag-and-drop directly onto chat viewport
-  ['dragenter', 'dragover'].forEach(name => {
-    chatViewport.addEventListener(name, (e) => {
-      e.preventDefault();
-      chatViewport.style.backgroundColor = 'rgba(16, 163, 127, 0.04)';
-    });
-  });
-
-  ['dragleave', 'drop'].forEach(name => {
-    chatViewport.addEventListener(name, (e) => {
-      e.preventDefault();
-      chatViewport.style.backgroundColor = '';
-    });
-  });
-
-  chatViewport.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length > 0) uploadFiles(files);
-  });
-
-  async function uploadFiles(files) {
+  async function handleFileUpload(files) {
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
     }
 
-    try {
-      progressCard.classList.add('active');
-      progressStage.textContent = 'Uploading...';
-      progressPercent.textContent = '0%';
-      progressBarFill.style.width = '5%';
-      progressDesc.textContent = `Uploading ${files.length} file(s)...`;
+    progressCard.classList.add('active');
+    progressStage.textContent = 'Uploading...';
+    progressPercent.textContent = '0%';
+    progressBarFill.style.width = '5%';
+    progressDesc.textContent = `Uploading ${files.length} document(s)...`;
 
-      const res = await fetch('/api/upload', {
+    try {
+      const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Upload failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Upload failed');
       }
 
       startStatusPolling();
     } catch (err) {
-      progressStage.textContent = 'Upload Error';
+      progressStage.textContent = 'Upload Failed';
       progressDesc.textContent = err.message;
       progressBarFill.style.background = '#ef4444';
       setTimeout(() => {
         progressCard.classList.remove('active');
         progressBarFill.style.background = '';
       }, 5000);
-    } finally {
-      fileInput.value = '';
     }
   }
 
@@ -355,27 +390,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const status = await res.json();
 
         if (status.is_processing) {
-          const pct = Math.round((status.progress || 0) * 100);
+          const pct = Math.round(status.progress * 100);
           progressStage.textContent = (status.stage || 'Processing').toUpperCase();
           progressPercent.textContent = `${pct}%`;
-          progressBarFill.style.width = `${Math.max(pct, 5)}%`;
+          progressBarFill.style.width = `${Math.max(5, pct)}%`;
           progressDesc.textContent = status.message || `Processing ${status.current_file}...`;
-        } else {
+        } else if (status.stage === 'done') {
           clearInterval(statusPollInterval);
-          statusPollInterval = null;
-
-          if (status.error) {
-            progressStage.textContent = 'FAILED';
-            progressDesc.textContent = status.error;
-            progressBarFill.style.background = '#ef4444';
-          } else {
-            progressStage.textContent = 'COMPLETE';
-            progressPercent.textContent = '100%';
-            progressBarFill.style.width = '100%';
-            progressDesc.textContent = 'Knowledge Graph & Embeddings updated!';
-            fetchHealth();
-          }
-
+          progressStage.textContent = 'INGESTION COMPLETE';
+          progressPercent.textContent = '100%';
+          progressBarFill.style.width = '100%';
+          progressDesc.textContent = 'All documents embedded into ChromaDB & Knowledge Graph!';
+          fetchHealth();
+          setTimeout(() => {
+            progressCard.classList.remove('active');
+          }, 3500);
+        } else if (status.stage === 'error') {
+          clearInterval(statusPollInterval);
+          progressStage.textContent = 'ERROR';
+          progressDesc.textContent = status.error || 'Ingestion encountered an error.';
+          progressBarFill.style.background = '#ef4444';
           setTimeout(() => {
             progressCard.classList.remove('active');
             progressBarFill.style.background = '';
@@ -387,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 800);
   }
 
-  // ── 6. Composer & Sending Logic ───────────────────────────────────────────
+  // ── 7. Composer & Sending Logic ───────────────────────────────────────────
 
   function updateSendBtnState() {
     const hasText = queryInput.value.trim().length > 0;
@@ -434,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── 7. Query Submission & Reasoning Accordion ─────────────────────────────
+  // ── 8. SSE Streaming Query Submission & Multi-Turn Memory ─────────────────
 
   async function handleUserSubmit(query) {
     if (!query || isGenerating) return;
@@ -446,111 +480,198 @@ document.addEventListener('DOMContentLoaded', () => {
     heroView.style.display = 'none';
     messagesList.style.display = 'flex';
 
-    // Append and save user message
+    // 1. Append User Message
     appendUserMessage(query, true);
 
-    // Create Assistant Row
+    // 2. Gather conversation history for Multi-Turn Reasoning
+    const session = getSessions().find(s => s.id === currentSessionId);
+    const conversation_history = (session && session.messages) ? session.messages.slice(-4).map(m => ({
+      role: m.role,
+      content: m.text,
+    })) : [];
+
+    // 3. Create Assistant Row with o1 Thinking Accordion
     const { assistantRow, thinkingSummary, thinkingDetails, bodyEl } = createAssistantRow();
     messagesList.appendChild(assistantRow);
     scrollToBottom();
 
-    // Start thinking timer
     isGenerating = true;
     updateSendBtnState();
+
     const startTime = Date.now();
     const timerInterval = setInterval(() => {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       thinkingSummary.innerHTML = `
         <div class="o1-left">
           <div class="thinking-pulse-dot"></div>
-          <span>Thinking for ${elapsed}s...</span>
+          <span>Reasoning for ${elapsed}s...</span>
         </div>
       `;
     }, 1000);
 
+    let accumulatedText = '';
+    let traces = [];
+    let detectedRoute = 'hybrid';
+
     try {
-      const response = await fetch('/api/query', {
+      // Stream tokens using Server-Sent Events (SSE)
+      const response = await fetch('/api/query/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, conversation_history }),
       });
 
-      clearInterval(timerInterval);
-      const totalSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
-
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Server error (${response.status})`);
+        throw new Error(`HTTP error ${response.status}`);
       }
 
-      const data = await response.json();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
 
-      // Render Thinking Trace
-      renderThinkingTrace(thinkingSummary, thinkingDetails, data.route, data.reasoning_trace, totalSeconds);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-      // Render Response
-      bodyEl.innerHTML = formatMarkdown(data.response || 'No response returned.');
-      setupCodeCopyButtons(bodyEl);
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop(); // Keep uncompleted chunk
 
-      // Save to chat session history
-      saveCurrentMessage('assistant', data.response, data.route, data.reasoning_trace, totalSeconds);
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const payload = JSON.parse(line.slice(6));
+            if (payload.event === 'trace') {
+              traces.push(payload.data);
+              renderThinkingTraces(thinkingDetails, traces);
+            } else if (payload.event === 'start_generation') {
+              detectedRoute = payload.route || 'hybrid';
+              clearInterval(timerInterval);
+              const totalSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+              thinkingSummary.innerHTML = `
+                <div class="o1-left">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  <span>Thought for ${totalSec}s</span>
+                  <span class="route-tag ${detectedRoute}">${detectedRoute.toUpperCase()}</span>
+                </div>
+                <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              `;
+              bodyEl.innerHTML = '<span class="streaming-cursor"></span>';
+            } else if (payload.event === 'token') {
+              accumulatedText += payload.token;
+              bodyEl.innerHTML = renderMarkdown(accumulatedText) + '<span class="streaming-cursor"></span>';
+              attachCodeCopyButtons(bodyEl);
+              scrollToBottom();
+            } else if (payload.event === 'done') {
+              accumulatedText = payload.response || accumulatedText;
+            }
+          } catch {
+            // Skip unparseable chunks
+          }
+        }
+      }
 
-    } catch (err) {
+      // Finalize rendering
       clearInterval(timerInterval);
+      const finalSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
       thinkingSummary.innerHTML = `
         <div class="o1-left">
-          <span style="color: #ef4444;">Error occurred</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Thought for ${finalSec}s</span>
+          <span class="route-tag ${detectedRoute}">${detectedRoute.toUpperCase()}</span>
         </div>
+        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
       `;
-      bodyEl.innerHTML = `<p style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25);">
-        ⚠️ <strong>Generation Error:</strong> ${escapeHtml(err.message)}
-      </p>`;
+
+      bodyEl.innerHTML = renderMarkdown(accumulatedText || 'No response generated.');
+      attachCodeCopyButtons(bodyEl);
+      saveMessageToCurrentSession('assistant', accumulatedText, traces, detectedRoute);
+
+    } catch (err) {
+      console.warn('Streaming encountered issue, falling back to sync query:', err);
+      // Fallback to synchronous endpoint
+      try {
+        const syncRes = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, conversation_history }),
+        });
+        clearInterval(timerInterval);
+        const data = await syncRes.json();
+        const finalSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+        const route = data.route || 'hybrid';
+        thinkingSummary.innerHTML = `
+          <div class="o1-left">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Thought for ${finalSec}s</span>
+            <span class="route-tag ${route}">${route.toUpperCase()}</span>
+          </div>
+          <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        `;
+        renderThinkingTraces(thinkingDetails, data.reasoning_trace || []);
+        bodyEl.innerHTML = renderMarkdown(data.response || 'No response generated.');
+        attachCodeCopyButtons(bodyEl);
+        saveMessageToCurrentSession('assistant', data.response, data.reasoning_trace, route);
+      } catch (syncErr) {
+        clearInterval(timerInterval);
+        bodyEl.innerHTML = `<div style="color: #ef4444;">Error connecting to engine: ${syncErr.message}</div>`;
+      }
     } finally {
+      clearInterval(timerInterval);
       isGenerating = false;
       updateSendBtnState();
       scrollToBottom();
-      queryInput.focus();
     }
   }
 
-  function appendUserMessage(text, shouldSave = false) {
+  // ── 9. Message DOM Creation & Helpers ─────────────────────────────────────
+
+  function appendUserMessage(text, save = true) {
     const row = document.createElement('div');
     row.className = 'message-row user';
-    row.innerHTML = `<div class="user-bubble">${escapeHtml(text)}</div>`;
+    row.innerHTML = `
+      <div class="user-bubble">${escapeHtml(text)}</div>
+    `;
     messagesList.appendChild(row);
-    if (shouldSave) {
-      saveCurrentMessage('user', text);
-    }
+    if (save) saveMessageToCurrentSession('user', text);
   }
 
-  function appendAssistantMessage(content, route, trace, seconds = 2, shouldSave = false) {
+  function appendAssistantMessage(text, reasoningTrace, route, save = true) {
     const { assistantRow, thinkingSummary, thinkingDetails, bodyEl } = createAssistantRow();
-    renderThinkingTrace(thinkingSummary, thinkingDetails, route, trace, seconds);
-    bodyEl.innerHTML = formatMarkdown(content);
-    setupCodeCopyButtons(bodyEl);
+    const routeClass = route || 'vector';
+    thinkingSummary.innerHTML = `
+      <div class="o1-left">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Reasoning Trace</span>
+        <span class="route-tag ${routeClass}">${routeClass.toUpperCase()}</span>
+      </div>
+      <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    `;
+
+    renderThinkingTraces(thinkingDetails, reasoningTrace || []);
+    bodyEl.innerHTML = renderMarkdown(text || '');
+    attachCodeCopyButtons(bodyEl);
+
     messagesList.appendChild(assistantRow);
-    if (shouldSave) {
-      saveCurrentMessage('assistant', content, route, trace, seconds);
-    }
+    if (save) saveMessageToCurrentSession('assistant', text, reasoningTrace, route);
   }
 
   function createAssistantRow() {
-    const assistantRow = document.createElement('div');
-    assistantRow.className = 'message-row assistant';
+    const row = document.createElement('div');
+    row.className = 'message-row assistant';
 
-    const avatar = document.createElement('div');
-    avatar.className = 'assistant-avatar';
-    avatar.innerHTML = `<img src="./assets/logo.svg" alt="AI" style="width: 28px; height: 28px;">`;
+    const avatarBox = document.createElement('div');
+    avatarBox.className = 'assistant-avatar-box';
+    avatarBox.innerHTML = `<img src="./assets/logo.svg" alt="GraphRAG">`;
 
-    const assistantContent = document.createElement('div');
-    assistantContent.className = 'assistant-body';
+    const contentBox = document.createElement('div');
+    contentBox.className = 'assistant-content';
 
-    // Thinking Box
     const thinkingBox = document.createElement('div');
     thinkingBox.className = 'o1-thinking-box';
 
     const thinkingSummary = document.createElement('div');
-    thinkingSummary.className = 'o1-thinking-summary';
+    thinkingSummary.className = 'o1-summary';
     thinkingSummary.innerHTML = `
       <div class="o1-left">
         <div class="thinking-pulse-dot"></div>
@@ -562,115 +683,228 @@ document.addEventListener('DOMContentLoaded', () => {
     thinkingDetails.className = 'o1-details';
 
     thinkingSummary.addEventListener('click', () => {
-      thinkingBox.classList.toggle('expanded');
+      thinkingDetails.classList.toggle('open');
+      const chevron = thinkingSummary.querySelector('.chevron-icon');
+      if (chevron) {
+        chevron.style.transform = thinkingDetails.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
     });
 
     thinkingBox.appendChild(thinkingSummary);
     thinkingBox.appendChild(thinkingDetails);
 
     const bodyEl = document.createElement('div');
-    bodyEl.className = 'markdown-output';
+    bodyEl.className = 'assistant-body';
 
-    assistantContent.appendChild(thinkingBox);
-    assistantContent.appendChild(bodyEl);
+    contentBox.appendChild(thinkingBox);
+    contentBox.appendChild(bodyEl);
 
-    assistantRow.appendChild(avatar);
-    assistantRow.appendChild(assistantContent);
+    row.appendChild(avatarBox);
+    row.appendChild(contentBox);
 
-    return { assistantRow, thinkingSummary, thinkingDetails, bodyEl };
+    return { assistantRow: row, thinkingSummary, thinkingDetails, bodyEl };
   }
 
-  function renderThinkingTrace(summaryEl, detailsEl, route, trace, seconds) {
-    const routeClass = `route-${route || 'hybrid'}`;
-    const routeLabel = (route || 'HYBRID').toUpperCase();
-
-    summaryEl.innerHTML = `
-      <div class="o1-left">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-purple);">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        <span>Thought for ${seconds}s</span>
-        <span class="route-tag ${routeClass}">${routeLabel}</span>
-      </div>
-      <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    `;
-
-    if (!trace || trace.length === 0) {
-      detailsEl.innerHTML = `<div style="color: var(--text-muted); font-size: 0.76rem;">Direct multi-hop traversal with router node classification.</div>`;
+  function renderThinkingTraces(container, traces) {
+    if (!traces || traces.length === 0) {
+      container.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px 0;">No trace steps recorded.</div>';
       return;
     }
 
     let html = '';
-    trace.forEach((step, idx) => {
-      const stepName = step.step || `Step ${idx + 1}`;
-      const details = step.details || step.description || step.content || JSON.stringify(step);
+    traces.forEach(step => {
+      const stepName = (step.step || 'Step').replace(/_/g, ' ').toUpperCase();
+      const latency = step.latency_sec ? `${step.latency_sec}s` : '';
       html += `
         <div class="trace-step">
-          <span style="color: var(--openai-green); font-weight: 600;">▸</span>
-          <div>
-            <strong>${escapeHtml(stepName)}:</strong>
-            <span style="color: var(--text-muted);">${escapeHtml(details)}</span>
+          <div class="trace-step-header">
+            <span>🔹 ${stepName}</span>
+            <span class="trace-latency">${latency}</span>
           </div>
+          <div class="trace-desc">${escapeHtml(step.description || '')}</div>
+      `;
+
+      if (step.sources && step.sources.length > 0) {
+        html += `<div class="trace-sources">`;
+        step.sources.forEach(src => {
+          html += `
+            <div class="trace-source-item">
+              <strong>${escapeHtml(src.source)}</strong> (p.${src.page}): 
+              <em>${escapeHtml(src.preview || '')}</em>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      if (step.triples && step.triples.length > 0) {
+        html += `<div class="trace-sources">`;
+        step.triples.forEach(t => {
+          html += `
+            <div class="trace-source-item">
+              🕸️ <strong>${escapeHtml(t.source)}</strong> —(${escapeHtml(t.relation)})→ <strong>${escapeHtml(t.target)}</strong>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // ── 10. 3D Knowledge Graph Modal Wiring ───────────────────────────────────
+
+  if (graphModalBtn) {
+    graphModalBtn.addEventListener('click', async () => {
+      graphModal.style.display = 'flex';
+      if (!graph3dInstance && window.KnowledgeGraph3D) {
+        graph3dInstance = new window.KnowledgeGraph3D('graph3dCanvas', 'graphCanvasWrapper', 'nodeInspector');
+        await graph3dInstance.loadData();
+        graph3dInstance.start();
+        const badge = document.getElementById('graphModalBadge');
+        if (badge) {
+          badge.textContent = `${graph3dInstance.nodes.length} Nodes • ${graph3dInstance.links.length} Edges`;
+        }
+      } else if (graph3dInstance) {
+        graph3dInstance.resize();
+        graph3dInstance.start();
+      }
+    });
+  }
+
+  function closeGraphModal() {
+    if (graphModal) graphModal.style.display = 'none';
+    if (graph3dInstance) graph3dInstance.stop();
+  }
+
+  if (graphCloseBtn) graphCloseBtn.addEventListener('click', closeGraphModal);
+  if (graphModalBackdrop) graphModalBackdrop.addEventListener('click', closeGraphModal);
+
+  if (graphSearchInput) {
+    graphSearchInput.addEventListener('input', (e) => {
+      if (graph3dInstance) graph3dInstance.filter(e.target.value);
+    });
+  }
+
+  if (graphResetBtn) {
+    graphResetBtn.addEventListener('click', () => {
+      if (graph3dInstance) graph3dInstance.reset();
+      if (graphSearchInput) graphSearchInput.value = '';
+    });
+  }
+
+  if (graphAutoRotateBtn) {
+    let autoRotate = true;
+    graphAutoRotateBtn.addEventListener('click', () => {
+      autoRotate = !autoRotate;
+      if (graph3dInstance) graph3dInstance.autoRotate = autoRotate;
+      graphAutoRotateBtn.textContent = `Auto-Rotate: ${autoRotate ? 'ON' : 'OFF'}`;
+    });
+  }
+
+  if (closeInspectorBtn && nodeInspector) {
+    closeInspectorBtn.addEventListener('click', () => {
+      nodeInspector.style.display = 'none';
+    });
+  }
+
+  // ── 11. Conversation Share / Export Engine ────────────────────────────────
+
+  if (shareChatBtn) {
+    shareChatBtn.addEventListener('click', () => {
+      const session = getSessions().find(s => s.id === currentSessionId);
+      if (!session || !session.messages || session.messages.length === 0) {
+        alert('Start a conversation first before exporting or sharing!');
+        return;
+      }
+
+      const exportPayload = {
+        title: session.title || 'GraphRAG Conversation',
+        exportedAt: new Date().toISOString(),
+        profile: currentProfile,
+        messages: session.messages,
+        engine: "Local-Agentic-GraphRAG v2.0 (Gemma 4 & EmbeddingGemma-2)",
+      };
+
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(session.title || 'GraphRAG_Chat').replace(/[^a-zA-Z0-9_-]/g, '_')}_export.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // ── 12. Markdown & Code Copy Helpers ──────────────────────────────────────
+
+  function renderMarkdown(md) {
+    if (!md) return '';
+    let html = escapeHtml(md);
+
+    // Code blocks
+    html = html.replace(/```([a-zA-Z0-9_]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const language = lang || 'code';
+      return `
+        <div class="code-block-wrapper">
+          <div class="code-block-header">
+            <span>${language}</span>
+            <button class="copy-code-btn" data-code="${encodeURIComponent(code)}">Copy code</button>
+          </div>
+          <pre><code>${code}</code></pre>
         </div>
       `;
     });
-    detailsEl.innerHTML = html;
+
+    // Inline code
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Bold & italic
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+    // Headers
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    // Lists
+    html = html.replace(/^\s*[-•]\s+(.*$)/gim, '<li>$1</li>');
+    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+
+    // Paragraphs
+    html = html.replace(/\n\n+/g, '</p><p>');
+    html = `<p>${html}</p>`;
+    html = html.replace(/<p><\/p>/g, '');
+
+    return html;
   }
 
-  // ── 8. Markdown Parser & Code Formatting ───────────────────────────────────
-
-  function formatMarkdown(md) {
-    if (!md) return '';
-
-    md = md.replace(/```([a-zA-Z0-9_\-\+]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-      const language = lang || 'code';
-      return `<pre><div style="display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); font-size:0.75rem; margin-bottom:8px; border-bottom:1px solid rgba(125,125,125,0.15); padding-bottom:4px;"><span>${language}</span><button class="copy-code-btn" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; font-size:0.73rem;">Copy code</button></div><code>${escapeHtml(code.trim())}</code></pre>`;
-    });
-
-    md = md.replace(/`([^`]+)`/g, '<code>$1</code>');
-    md = md.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    md = md.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    md = md.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-    md = md.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    md = md.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    md = md.replace(/^\> (.*$)/gim, '<blockquote style="border-left:3px solid var(--openai-green); padding-left:12px; color:var(--text-secondary); margin:8px 0;">$1</blockquote>');
-    md = md.replace(/^\- (.*$)/gim, '<li>$1</li>');
-    md = md.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
-
-    md = md.split('\n\n').map(p => {
-      p = p.trim();
-      if (!p) return '';
-      if (p.startsWith('<pre') || p.startsWith('<h') || p.startsWith('<ul') || p.startsWith('<blockquote')) {
-        return p;
-      }
-      return `<p>${p.replace(/\n/g, '<br>')}</p>`;
-    }).join('');
-
-    return md;
-  }
-
-  function setupCodeCopyButtons(container) {
+  function attachCodeCopyButtons(container) {
     container.querySelectorAll('.copy-code-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const pre = e.target.closest('pre');
-        const code = pre.querySelector('code');
-        if (code) {
-          navigator.clipboard.writeText(code.innerText).then(() => {
-            btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = 'Copy code'; }, 2000);
-          });
-        }
-      });
+      btn.onclick = () => {
+        const code = decodeURIComponent(btn.getAttribute('data-code'));
+        navigator.clipboard.writeText(code).then(() => {
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = 'Copy code'; }, 2000);
+        });
+      };
     });
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function scrollToBottom() {

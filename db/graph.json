@@ -2759,6 +2759,22 @@
       "properties": {
         "source": "Local GraphRAG - Project Report.docx"
       }
+    },
+    {
+      "id": "acfc205b40",
+      "label": "Animated Whiteboard Explainer Video",
+      "type": "concept",
+      "properties": {
+        "source": "Finance - - Animated Whiteboard Explainer Video.mp4"
+      }
+    },
+    {
+      "id": "57336afd1f",
+      "label": "Finance",
+      "type": "concept",
+      "properties": {
+        "source": "Finance - - Animated Whiteboard Explainer Video.mp4"
+      }
     }
   ],
   "edges": [
@@ -3981,6 +3997,11 @@
       "source": "a5e200bf22",
       "relation": "location",
       "target": "d5b8ba2c56"
+    },
+    {
+      "source": "acfc205b40",
+      "relation": "covers_topic",
+      "target": "57336afd1f"
     }
   ]
 }

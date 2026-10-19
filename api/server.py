@@ -15,6 +15,7 @@ mimetypes.add_type("font/woff", ".woff")
 mimetypes.add_type("image/svg+xml", ".svg")
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -33,9 +34,10 @@ from core.config import (
     EMBEDDING_MODEL,
     ROUTER_MODEL,
 )
-from core.engine import run_query
+from core.engine import run_query, stream_query_events
 from core.ingest import extract_text, chunk_documents, embed_chunks, ingest_files
-from core.graph_builder import build_graph_from_chunks
+from core.graph_builder import build_graph_from_chunks, load_graph
+from core.neo4j_engine import neo4j_engine
 
 
 # ─── Background Processing ───────────────────────────────────────────────────
@@ -159,6 +161,7 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000, description="The user's question")
+    conversation_history: list[dict] = Field(default_factory=list, description="Past conversation turns for multi-turn memory")
 
 class QueryResponse(BaseModel):
     response: str
@@ -169,6 +172,7 @@ class HealthResponse(BaseModel):
     status: str
     lm_studio: dict
     database: dict
+    neo4j: dict = Field(default_factory=dict)
 
 class UploadResponse(BaseModel):
     message: str
@@ -190,9 +194,10 @@ class ProcessingStatusResponse(BaseModel):
 
 @app.get("/api/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
-    """System health: LM Studio connectivity + database readiness."""
+    """System health: LM Studio connectivity + database readiness + Neo4j status."""
     lm_status = is_lm_studio_running()
     db_status = is_db_ready()
+    neo_status = neo4j_engine.get_stats()
 
     all_ok = lm_status.get("running", False)
 
@@ -200,6 +205,7 @@ async def health_check():
         status="healthy" if all_ok else "degraded",
         lm_studio=lm_status,
         database=db_status,
+        neo4j=neo_status,
     )
 
 
@@ -317,7 +323,7 @@ async def query_engine(request: QueryRequest):
         )
 
     try:
-        result = run_query(request.query)
+        result = run_query(request.query, request.conversation_history)
         return QueryResponse(
             response=result.get("response", "No response generated."),
             route=result.get("route", "unknown"),
@@ -328,6 +334,116 @@ async def query_engine(request: QueryRequest):
             status_code=500,
             detail=f"Engine error: {str(e)}",
         )
+
+
+@app.post("/api/query/stream", tags=["Query"])
+async def query_stream_endpoint(request: QueryRequest):
+    """
+    Live streaming query endpoint using Server-Sent Events (SSE).
+    Emits reasoning trace events as they happen, followed by live token-by-token generation.
+    """
+    lm_status = is_lm_studio_running()
+    if not lm_status.get("running"):
+        raise HTTPException(
+            status_code=503,
+            detail="LM Studio is not running. Please start LM Studio and try again.",
+        )
+
+    db_status = is_db_ready()
+    if not db_status.get("ready"):
+        raise HTTPException(
+            status_code=503,
+            detail="No documents ingested yet. Please upload PDF/DOCX files first.",
+        )
+
+    return StreamingResponse(
+        stream_query_events(request.query, request.conversation_history),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )
+
+
+@app.get("/api/graph/3d-data", tags=["Knowledge Graph"])
+async def get_3d_graph():
+    """
+    Returns graph nodes and links formatted for interactive 3D WebGL force visualization.
+    Computes degree centrality and assigns palette colors to clusters.
+    """
+    data = load_graph()
+    nodes = data.get("nodes", [])
+    edges = data.get("edges", [])
+
+    degrees = {}
+    for e in edges:
+        s = e.get("source")
+        t = e.get("target")
+        degrees[s] = degrees.get(s, 0) + 1
+        degrees[t] = degrees.get(t, 0) + 1
+
+    palette = [
+        "#10a37f", "#38bdf8", "#ab68ff", "#f59e0b",
+        "#ec4899", "#14b8a6", "#6366f1", "#84cc16"
+    ]
+
+    formatted_nodes = []
+    for n in nodes:
+        node_id = n.get("id") or n.get("label")
+        deg = degrees.get(node_id, 1)
+        node_type = n.get("type", "concept")
+        color_idx = abs(hash(node_type)) % len(palette)
+        formatted_nodes.append({
+            "id": node_id,
+            "name": n.get("label", node_id),
+            "type": node_type,
+            "val": min(deg * 2 + 4, 32),
+            "color": palette[color_idx],
+            "degree": deg,
+        })
+
+    formatted_links = []
+    for e in edges:
+        formatted_links.append({
+            "source": e.get("source"),
+            "target": e.get("target"),
+            "relation": e.get("relation", "related_to"),
+        })
+
+    neo_status = neo4j_engine.get_stats()
+
+    return {
+        "nodes": formatted_nodes,
+        "links": formatted_links,
+        "total_nodes": len(formatted_nodes),
+        "total_edges": len(formatted_links),
+        "neo4j": neo_status,
+    }
+
+
+class ExportRequest(BaseModel):
+    title: str = "Conversation Export"
+    messages: list[dict]
+    profile: str = "Default"
+
+
+@app.post("/api/conversations/export", tags=["Conversation"])
+async def export_conversation(req: ExportRequest):
+    """Generates a portable, self-contained standalone export payload."""
+    return {
+        "status": "success",
+        "title": req.title,
+        "profile": req.profile,
+        "message_count": len(req.messages),
+        "download_name": f"{req.title.replace(' ', '_')[:30]}_export.json",
+        "data": {
+            "title": req.title,
+            "profile": req.profile,
+            "messages": req.messages,
+        }
+    }
 
 
 # ─── Static Frontend Mount (Authentic ChatGPT UI) ───────────────────────────
