@@ -9,6 +9,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -318,19 +319,11 @@ async def query_engine(request: QueryRequest):
         )
 
 
-@app.get("/", tags=["System"])
-async def root():
-    """Root info."""
-    return {
-        "message": "Local GraphRAG API v2.0",
-        "docs": "/docs",
-        "endpoints": {
-            "health": "GET /api/health",
-            "upload": "POST /api/upload",
-            "upload_status": "GET /api/upload-status",
-            "query": "POST /api/query",
-        },
-    }
+# ─── Static Frontend Mount (Authentic ChatGPT UI) ───────────────────────────
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
 
 
 # ─── Direct Run ───────────────────────────────────────────────────────────────
