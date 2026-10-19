@@ -29,7 +29,6 @@
   font-display: swap;
 }
 
-/* Alias OpenAISans for zero-fail fallback */
 @font-face {
   font-family: 'OpenAISans';
   src: url('./assets/fonts/OpenAISans-Regular-c56711d328c4.woff2') format('woff2');
@@ -146,7 +145,7 @@ body {
   position: relative;
 }
 
-/* ── Left Sidebar (Pinned Left Telemetry) ──────────────────────────────────── */
+/* ── Left Sidebar (Clean ChatGPT Structure) ────────────────────────────────── */
 
 .sidebar {
   width: var(--sidebar-width);
@@ -169,6 +168,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .brand-row {
@@ -211,86 +211,16 @@ body {
   border-color: var(--border-medium);
 }
 
-/* ── Pinned Left Engine Telemetry (PROMINENT ON LEFT SIDE) ─────────────────── */
-
-.sidebar-telemetry-panel {
-  padding: 10px 14px;
-  background: rgba(16, 163, 127, 0.04);
-  border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.telemetry-panel-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.telemetry-title {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-}
-
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.74rem;
-  font-weight: 500;
-}
-
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--text-muted);
-}
-
-.dot.online {
-  background-color: var(--openai-green);
-  box-shadow: 0 0 8px rgba(16, 163, 127, 0.8);
-}
-
-.dot.offline {
-  background-color: #ef4444;
-}
-
-.telemetry-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.telem-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.74rem;
-  color: var(--text-secondary);
-}
-
-.telem-val {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-/* ── Scrollable Middle Section: Chat History ──────────────────────────────── */
+/* ── Middle: Full-Height Chat History ─────────────────────────────────────── */
 
 .sidebar-scrollable {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 14px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .sidebar-label {
@@ -361,125 +291,77 @@ body {
   background-color: rgba(239, 68, 68, 0.1);
 }
 
-/* ── Multi-Format Upload Section & Progress ───────────────────────────────── */
+/* ── Bottom-Left: Engine Telemetry (Cleanly Docked at Bottom of Sidebar) ──── */
 
-.sidebar-upload-section {
-  padding: 10px 14px;
+.sidebar-footer {
+  padding: 12px 14px;
   border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-sidebar);
   flex-shrink: 0;
 }
 
-.dropzone {
-  border: 1px dashed var(--border-medium);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  text-align: center;
-  background-color: rgba(125, 125, 125, 0.03);
-  cursor: pointer;
-  transition: all 0.2s ease;
+.sidebar-telemetry-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.dropzone:hover, .dropzone.dragover {
-  border-color: var(--openai-green);
-  background-color: var(--accent-glow);
-}
-
-.dropzone-icon {
-  width: 18px;
-  height: 18px;
-  margin: 0 auto 3px auto;
-  color: var(--text-secondary);
-}
-
-.dropzone-text {
-  font-size: 0.74rem;
-  color: var(--text-secondary);
-  line-height: 1.3;
-}
-
-.dropzone-sub {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-/* Progress card */
-.progress-card {
-  background-color: rgba(16, 163, 127, 0.08);
-  border: 1px solid rgba(16, 163, 127, 0.25);
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-  margin-top: 6px;
-  display: none;
-}
-
-.progress-card.active {
-  display: block;
-}
-
-.progress-header {
+.telemetry-panel-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.telemetry-title {
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--openai-green);
-  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
 }
 
-.progress-bar-bg {
-  height: 4px;
-  width: 100%;
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  overflow: hidden;
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 500;
 }
 
-.progress-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--openai-green), #34d399);
-  transition: width 0.3s ease;
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
 }
 
-.progress-desc {
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-  margin-top: 4px;
+.dot.online {
+  background-color: var(--openai-green);
+  box-shadow: 0 0 8px rgba(16, 163, 127, 0.8);
 }
 
-/* Sidebar Footer (Clean Actions: Export PDF) */
-.sidebar-footer {
-  padding: 10px 14px;
-  border-top: 1px solid var(--border-subtle);
+.dot.offline {
+  background-color: #ef4444;
+}
+
+.telemetry-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.telem-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.sidebar-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid var(--border-subtle);
+  font-size: 0.73rem;
   color: var(--text-secondary);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  width: 100%;
-  justify-content: center;
 }
 
-.sidebar-action-btn:hover {
-  background-color: var(--bg-surface);
+.telem-val {
+  font-weight: 500;
   color: var(--text-primary);
-  border-color: var(--border-medium);
 }
 
 /* ── Main Chat Container ───────────────────────────────────────────────────── */
@@ -572,7 +454,7 @@ body {
   border-radius: var(--radius-pill);
 }
 
-/* Top Right Header: ONLY Theme Toggle (Clean, NO PDF upload on right!) */
+/* Top Right Header: ONLY Theme Switcher (Zero PDF buttons!) */
 .header-right {
   display: flex;
   align-items: center;
@@ -889,6 +771,55 @@ body {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--bg-main) 65%);
 }
 
+/* Floating Upload Progress Banner */
+.upload-progress-banner {
+  width: 100%;
+  max-width: var(--chat-max-width);
+  background-color: var(--bg-surface);
+  border: 1px solid rgba(16, 163, 127, 0.3);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.2s ease;
+}
+
+.upload-progress-banner.active {
+  display: block;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--openai-green);
+  margin-bottom: 6px;
+}
+
+.progress-bar-bg {
+  height: 5px;
+  width: 100%;
+  background-color: rgba(125, 125, 125, 0.2);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--openai-green), #34d399);
+  transition: width 0.3s ease;
+}
+
+.progress-desc {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
 .composer-box {
   width: 100%;
   max-width: var(--chat-max-width);
@@ -976,56 +907,6 @@ body {
   color: var(--text-muted);
   margin-top: 8px;
   text-align: center;
-}
-
-/* ── Print / PDF Export Styles (@media print) ─────────────────────────────── */
-
-@media print {
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-  .sidebar,
-  .chat-header,
-  .composer-container,
-  .hero-view,
-  .icon-btn,
-  .copy-code-btn {
-    display: none !important;
-  }
-  .chat-container {
-    height: auto !important;
-    overflow: visible !important;
-  }
-  .chat-viewport {
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-  .messages-list {
-    max-width: 100% !important;
-    display: flex !important;
-  }
-  .user-bubble {
-    background: #f3f3f3 !important;
-    color: #000000 !important;
-    box-shadow: none !important;
-    border: 1px solid #e0e0e0 !important;
-  }
-  .assistant-body {
-    color: #000000 !important;
-  }
-  .assistant-body pre {
-    background: #f8f8f8 !important;
-    border: 1px solid #ddd !important;
-    color: #000000 !important;
-  }
-  .o1-thinking-box {
-    border: 1px solid #ddd !important;
-    background: #fdfdfd !important;
-  }
-  .o1-details {
-    display: block !important;
-  }
 }
 
 /* Animations */

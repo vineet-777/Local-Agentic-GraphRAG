@@ -28,36 +28,7 @@
         </button>
       </div>
 
-      <!-- 2. Pinned Engine Telemetry (PROMINENT ON LEFT SIDE) -->
-      <div class="sidebar-telemetry-panel">
-        <div class="telemetry-panel-top">
-          <span class="telemetry-title">Engine Telemetry</span>
-          <span class="status-indicator">
-            <span class="dot online" id="lmDot"></span>
-            <span id="lmText">Connected (:1234)</span>
-          </span>
-        </div>
-        <div class="telemetry-grid">
-          <div class="telem-row">
-            <span>LLM Router</span>
-            <span class="telem-val" id="llmModelTag">gemma-4-e4b</span>
-          </div>
-          <div class="telem-row">
-            <span>Embeddings</span>
-            <span class="telem-val" id="embedModelTag">embeddinggemma-2 (768d)</span>
-          </div>
-          <div class="telem-row">
-            <span>Knowledge Graph</span>
-            <span class="telem-val" id="graphStats" style="color: var(--openai-green); font-weight: 600;">345 nodes • 244 edges</span>
-          </div>
-          <div class="telem-row">
-            <span>ChromaDB</span>
-            <span class="telem-val" id="chromaStatus" style="color: var(--openai-green); font-weight: 600;">Indexed (Ready)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Scrollable Middle: Chat History -->
+      <!-- 2. Clean Chat History (Full Height, Spacious, Zero Clutter) -->
       <div class="sidebar-scrollable">
         <div class="sidebar-label">Chat History</div>
         <div class="history-list" id="historyList">
@@ -65,43 +36,35 @@
         </div>
       </div>
 
-      <!-- 4. Multi-Format Knowledge Base Ingestion -->
-      <div class="sidebar-upload-section">
-        <div class="dropzone" id="dropzone" title="Drag & drop or click to upload">
-          <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.py,.png,.jpg,.jpeg,.webp,.mp4" style="display: none;">
-          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <div class="dropzone-text"><strong>Upload Documents & Media</strong></div>
-          <div class="dropzone-sub">PDF, DOCX, PPTX, Images, TXT, Video</div>
-        </div>
-
-        <!-- Ingestion Progress Card -->
-        <div class="progress-card" id="progressCard">
-          <div class="progress-header">
-            <span id="progressStage">Processing...</span>
-            <span id="progressPercent">0%</span>
-          </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressBarFill"></div>
-          </div>
-          <div class="progress-desc" id="progressDesc">Extracting documents...</div>
-        </div>
-      </div>
-
-      <!-- 5. Sidebar Footer (Export PDF & System Info) -->
+      <!-- 3. Engine Telemetry (Docked at the Bottom-Left of the Screen) -->
       <div class="sidebar-footer">
-        <button class="sidebar-action-btn" id="exportPdfBtn" title="Export conversation as clean PDF report">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
-          <span>Export Chat PDF</span>
-        </button>
+        <div class="sidebar-telemetry-panel">
+          <div class="telemetry-panel-top">
+            <span class="telemetry-title">Engine Telemetry</span>
+            <span class="status-indicator">
+              <span class="dot online" id="lmDot"></span>
+              <span id="lmText">Connected (:1234)</span>
+            </span>
+          </div>
+          <div class="telemetry-grid">
+            <div class="telem-row">
+              <span>LLM Router</span>
+              <span class="telem-val" id="llmModelTag">gemma-4-e4b</span>
+            </div>
+            <div class="telem-row">
+              <span>Embeddings</span>
+              <span class="telem-val" id="embedModelTag">embeddinggemma-2 (768d)</span>
+            </div>
+            <div class="telem-row">
+              <span>Knowledge Graph</span>
+              <span class="telem-val" id="graphStats" style="color: var(--openai-green); font-weight: 600;">347 nodes • 245 edges</span>
+            </div>
+            <div class="telem-row">
+              <span>ChromaDB</span>
+              <span class="telem-val" id="chromaStatus" style="color: var(--openai-green); font-weight: 600;">Indexed (Ready)</span>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
 
@@ -129,7 +92,7 @@
           </div>
         </div>
 
-        <!-- Top Right Header: ONLY Theme Switcher (NO PDF upload on right!) -->
+        <!-- Top Right Header: ONLY Theme Toggle (Zero PDF buttons!) -->
         <div class="header-right">
           <button class="icon-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode">
             <svg id="themeIcon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -191,6 +154,21 @@
 
       <!-- Bottom Floating Composer -->
       <footer class="composer-container">
+        <!-- Hidden file input for composer paperclip (accepts all formats) -->
+        <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc,.pptx,.ppt,.txt,.md,.csv,.json,.py,.png,.jpg,.jpeg,.webp,.mp4" style="display: none;">
+
+        <!-- Floating Upload Progress Banner (Appears ONLY during file ingestion) -->
+        <div class="upload-progress-banner" id="progressCard">
+          <div class="progress-header">
+            <span id="progressStage">Processing...</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+          <div class="progress-desc" id="progressDesc">Ingesting file into GraphRAG...</div>
+        </div>
+
         <div class="composer-box" id="composerBox">
           <!-- Attachment clip button (Multi-format) -->
           <button class="composer-action-btn" id="attachBtn" title="Attach documents, presentations, or media">

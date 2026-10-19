@@ -1,7 +1,8 @@
 /**
  * Local Agentic GraphRAG — Web Application Controller
- * Features: Chat History (localStorage), Dark/Light Mode, PDF Export,
- * Multi-format File Ingestion, and OpenAI o1-Style Reasoning Accordion.
+ * Features: Chat History (localStorage), Dark/Light Mode,
+ * Bottom Paperclip Multi-format Ingestion, Docked Left Telemetry,
+ * and OpenAI o1-Style Reasoning Accordion.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,8 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const newChatBtn = document.getElementById('newChatBtn');
   const historyList = document.getElementById('historyList');
 
-  // File Upload Elements
-  const dropzone = document.getElementById('dropzone');
+  // File Upload Elements (Paperclip in Bottom Composer)
   const fileInput = document.getElementById('fileInput');
   const attachBtn = document.getElementById('attachBtn');
   const progressCard = document.getElementById('progressCard');
@@ -21,12 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressBarFill = document.getElementById('progressBarFill');
   const progressDesc = document.getElementById('progressDesc');
 
-  // Top Actions
-  const exportPdfBtn = document.getElementById('exportPdfBtn');
+  // Theme Toggle Button
   const themeToggleBtn = document.getElementById('themeToggleBtn');
   const themeIcon = document.getElementById('themeIcon');
 
-  // Telemetry Elements (Left Sidebar)
+  // Docked Left Telemetry Elements (Bottom of Sidebar)
   const lmDot = document.getElementById('lmDot');
   const lmText = document.getElementById('lmText');
   const llmModelTag = document.getElementById('llmModelTag');
@@ -62,12 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem(STORAGE_KEY_THEME, theme);
 
     if (theme === 'light') {
-      // Show Moon icon (click to switch to dark)
       themeIcon.innerHTML = `
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
       `;
     } else {
-      // Show Sun icon (click to switch to light)
       themeIcon.innerHTML = `
         <circle cx="12" cy="12" r="5"></circle>
         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -89,18 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initTheme();
 
-  // ── 2. PDF / Report Export ────────────────────────────────────────────────
-
-  exportPdfBtn.addEventListener('click', () => {
-    // If conversation is empty, alert user
-    if (!messagesList.children || messagesList.children.length === 0) {
-      alert('Start a conversation first before exporting as PDF!');
-      return;
-    }
-    window.print();
-  });
-
-  // ── 3. Chat History Management (localStorage) ─────────────────────────────
+  // ── 2. Chat History Management (localStorage) ─────────────────────────────
 
   function getSessions() {
     try {
@@ -233,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   newChatBtn.addEventListener('click', createNewSession);
 
-  // Initialize with new session or latest
+  // Initialize with latest session or new
   const existingSessions = getSessions();
   if (existingSessions.length > 0) {
     loadSession(existingSessions[0].id);
@@ -241,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createNewSession();
   }
 
-  // ── 4. Telemetry Checks (LM Studio & Knowledge Graph) ─────────────────────
+  // ── 3. Docked Left Telemetry Checks (LM Studio & Knowledge Graph) ─────────
 
   async function fetchHealth() {
     try {
@@ -275,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchHealth();
   setInterval(fetchHealth, 10000);
 
-  // ── 5. Sidebar Toggle & Shortcuts ─────────────────────────────────────────
+  // ── 4. Sidebar Toggle & Shortcuts ─────────────────────────────────────────
 
   toggleSidebarBtn.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
@@ -292,34 +278,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ── 6. Multi-Format File Ingestion (PDF, DOCX, PPTX, Images, Video) ───────
+  // ── 5. Multi-Format Upload (Only Paperclip in Bottom Composer) ─────────────
 
-  dropzone.addEventListener('click', () => fileInput.click());
   attachBtn.addEventListener('click', () => fileInput.click());
-
-  ['dragenter', 'dragover'].forEach(name => {
-    dropzone.addEventListener(name, (e) => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
-    });
-  });
-
-  ['dragleave', 'drop'].forEach(name => {
-    dropzone.addEventListener(name, (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('dragover');
-    });
-  });
-
-  dropzone.addEventListener('drop', (e) => {
-    const files = e.dataTransfer.files;
-    if (files.length > 0) uploadFiles(files);
-  });
 
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
       uploadFiles(fileInput.files);
     }
+  });
+
+  // Also support drag-and-drop directly onto chat viewport
+  ['dragenter', 'dragover'].forEach(name => {
+    chatViewport.addEventListener(name, (e) => {
+      e.preventDefault();
+      chatViewport.style.backgroundColor = 'rgba(16, 163, 127, 0.04)';
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(name => {
+    chatViewport.addEventListener(name, (e) => {
+      e.preventDefault();
+      chatViewport.style.backgroundColor = '';
+    });
+  });
+
+  chatViewport.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) uploadFiles(files);
   });
 
   async function uploadFiles(files) {
@@ -401,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 800);
   }
 
-  // ── 7. Composer & Sending Logic ───────────────────────────────────────────
+  // ── 6. Composer & Sending Logic ───────────────────────────────────────────
 
   function updateSendBtnState() {
     const hasText = queryInput.value.trim().length > 0;
@@ -448,12 +434,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── 8. Query Submission & Reasoning Accordion ─────────────────────────────
+  // ── 7. Query Submission & Reasoning Accordion ─────────────────────────────
 
   async function handleUserSubmit(query) {
     if (!query || isGenerating) return;
 
-    // Reset input
     queryInput.value = '';
     adjustTextareaHeight();
     updateSendBtnState();
@@ -635,37 +620,26 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsEl.innerHTML = html;
   }
 
-  // ── 9. Markdown Parser & Code Formatting ───────────────────────────────────
+  // ── 8. Markdown Parser & Code Formatting ───────────────────────────────────
 
   function formatMarkdown(md) {
     if (!md) return '';
 
-    // Code blocks with syntax badge and copy button
     md = md.replace(/```([a-zA-Z0-9_\-\+]*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const language = lang || 'code';
       return `<pre><div style="display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); font-size:0.75rem; margin-bottom:8px; border-bottom:1px solid rgba(125,125,125,0.15); padding-bottom:4px;"><span>${language}</span><button class="copy-code-btn" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; font-size:0.73rem;">Copy code</button></div><code>${escapeHtml(code.trim())}</code></pre>`;
     });
 
-    // Inline code
     md = md.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Headers
     md = md.replace(/^### (.*$)/gim, '<h3>$1</h3>');
     md = md.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     md = md.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-
-    // Bold & Italics
     md = md.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     md = md.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
-    // Blockquotes
     md = md.replace(/^\> (.*$)/gim, '<blockquote style="border-left:3px solid var(--openai-green); padding-left:12px; color:var(--text-secondary); margin:8px 0;">$1</blockquote>');
-
-    // Bullet lists
     md = md.replace(/^\- (.*$)/gim, '<li>$1</li>');
     md = md.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
 
-    // Paragraphs
     md = md.split('\n\n').map(p => {
       p = p.trim();
       if (!p) return '';
