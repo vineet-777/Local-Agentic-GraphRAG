@@ -192,6 +192,7 @@ def is_lm_studio_running() -> dict:
         resp = requests.get(f"{LM_STUDIO_BASE_URL}/models", timeout=5)
         if resp.status_code == 200:
             data = resp.json()
+            models = [m.get("id", "") for m in data.get("data", [])]
             # Flexible matching for LLM and Embedding models
             llm_active = SYNTHESISER_MODEL in models or any("gemma" in m.lower() for m in models)
             embed_active = (
