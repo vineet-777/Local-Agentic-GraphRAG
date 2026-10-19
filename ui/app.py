@@ -3,6 +3,7 @@ Local GraphRAG — Streamlit Frontend
 Dynamic file upload + chat UI with reasoning trace sidebar.
 """
 
+import json
 import streamlit as st
 import requests
 import time
@@ -747,49 +748,83 @@ if prompt := st.chat_input(
     # Query the engine
     with st.chat_message("assistant", avatar="🧠"):
         with st.spinner("Thinking..."):
+            answer = ""
+            stream_complete = False
+            stream_error = None
+            answer_placeholder = st.empty()
             try:
                 t0 = time.time()
-                resp = requests.post(
+                with requests.post(
                     API_QUERY,
                     json={"query": prompt},
-                    headers=auth_headers(),
+                    headers={**auth_headers(), "Accept": "text/event-stream"},
                     timeout=300,  # Gemma 4 on 4GB VRAM can be slow
-                )
-                total_time = round(time.time() - t0, 2)
+                    stream=True,
+                ) as resp:
+                    if resp.status_code == 200:
+                        event_name = None
+                        event_data = []
+                        route = "unknown"
+                        trace = []
 
-                if resp.status_code == 200:
-                    data = resp.json()
-                    answer = data.get("response", "No response received.")
-                    route = data.get("route", "unknown")
-                    trace = data.get("reasoning_trace", [])
+                        for line in resp.iter_lines(decode_unicode=True, chunk_size=1):
+                            if isinstance(line, bytes):
+                                line = line.decode("utf-8")
+                            if line.startswith("event: "):
+                                event_name = line[7:]
+                            elif line.startswith("data: "):
+                                event_data.append(line[6:])
+                            elif not line and event_name:
+                                payload = json.loads("\n".join(event_data))
+                                if event_name == "token":
+                                    answer += payload["text"]
+                                    answer_placeholder.markdown(answer)
+                                elif event_name == "complete":
+                                    route = payload.get("route", "unknown")
+                                    trace = payload.get("reasoning_trace", [])
+                                    stream_complete = True
+                                    break
+                                elif event_name == "error":
+                                    stream_error = payload
+                                    break
+                                event_name = None
+                                event_data = []
 
-                    st.markdown(answer)
+                        if stream_complete:
+                            total_time = round(time.time() - t0, 2)
+                            route_label = "📄 Vector DB" if route == "vector" else "🔗 Knowledge Graph"
+                            route_class = "route-vector" if route == "vector" else "route-graph"
+                            st.markdown(
+                                f'<span class="route-badge {route_class}">{route_label}</span> '
+                                f'<span style="font-size:0.75rem;color:rgba(255,255,255,0.4)">({total_time}s)</span>',
+                                unsafe_allow_html=True,
+                            )
 
-                    route_label = "📄 Vector DB" if route == "vector" else "🔗 Knowledge Graph"
-                    route_class = "route-vector" if route == "vector" else "route-graph"
-                    st.markdown(
-                        f'<span class="route-badge {route_class}">{route_label}</span> '
-                        f'<span style="font-size:0.75rem;color:rgba(255,255,255,0.4)">({total_time}s)</span>',
-                        unsafe_allow_html=True,
-                    )
-
-                    msg_idx = len(st.session_state.messages)
-                    st.session_state.traces[msg_idx] = trace
-
-                    st.session_state.messages.append({"role": "assistant", "content": answer})
-                    st.rerun()
-
-                elif resp.status_code == 401:
-                    expire_session()
-                elif resp.status_code == 503:
-                    error_detail = response_detail(resp)
-                    st.error(f"⚠️ {error_detail}")
-                else:
-                    st.error(f"❌ API error ({resp.status_code}): {response_detail(resp)}")
+                            msg_idx = len(st.session_state.messages)
+                            st.session_state.traces[msg_idx] = trace
+                            answer = answer.strip()
+                            st.session_state.messages.append({"role": "assistant", "content": answer})
+                            st.rerun()
+                        elif stream_error:
+                            st.error(f"❌ {stream_error}")
+                        else:
+                            st.error("❌ The answer stream ended before generation completed.")
+                    elif resp.status_code == 401:
+                        expire_session()
+                    elif resp.status_code == 503:
+                        error_detail = response_detail(resp)
+                        st.error(f"⚠️ {error_detail}")
+                    else:
+                        st.error(f"❌ API error ({resp.status_code}): {response_detail(resp)}")
 
             except requests.ConnectionError:
                 st.error("❌ Cannot connect to the API server. Is it running?")
             except requests.Timeout:
-                st.error("⏰ Request timed out. The LLM may still be loading.")
+                st.error("⏰ The answer stream timed out. The LLM may still be loading.")
+            except requests.RequestException as e:
+                st.error(f"❌ Connection interrupted while receiving the answer: {e}")
             except Exception as e:
                 st.error(f"❌ Unexpected error: {str(e)}")
+
+            if answer and not stream_complete:
+                st.session_state.messages.append({"role": "assistant", "content": answer.strip()})

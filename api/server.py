@@ -3,13 +3,19 @@ Local GraphRAG — FastAPI Backend
 Serves the LangGraph engine + dynamic file upload/ingestion. Fully local.
 """
 
-import sys
+import asyncio
+import json
+import queue
 import shutil
+import sys
+import threading
 from pathlib import Path
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 
@@ -191,6 +197,59 @@ class QueryResponse(BaseModel):
     route: str
     reasoning_trace: list[dict]
 
+
+def _sse_event(name: str, data: dict | str) -> str:
+    return f"event: {name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+async def _stream_query_response(
+    query: str,
+    request: Request,
+) -> AsyncIterator[str]:
+    events: queue.Queue[tuple[str, str | dict]] = queue.Queue()
+    cancelled = threading.Event()
+
+    def send_chunk(text: str) -> bool:
+        if cancelled.is_set():
+            return True
+        events.put(("token", text))
+        return cancelled.is_set()
+
+    def execute_query() -> None:
+        try:
+            result = run_query(
+                query,
+                on_chunk=send_chunk,
+                cancel_event=cancelled,
+            )
+        except Exception as exc:
+            events.put(("error", f"Engine error: {exc}"))
+        else:
+            events.put(("complete", {
+                "route": result.get("route", "unknown"),
+                "reasoning_trace": result.get("reasoning_trace", []),
+            }))
+
+    worker = threading.Thread(target=execute_query, daemon=True)
+    worker.start()
+    try:
+        while True:
+            if await request.is_disconnected():
+                break
+            try:
+                name, data = await asyncio.to_thread(events.get, True, 0.1)
+            except queue.Empty:
+                continue
+            if name == "token":
+                yield _sse_event(name, {"text": data})
+            else:
+                yield _sse_event(name, data)
+                break
+    finally:
+        cancelled.set()
+        await asyncio.to_thread(worker.join, 1)
+
+
 class HealthResponse(BaseModel):
     status: str
     lm_studio: dict
@@ -354,8 +413,17 @@ async def get_upload_status(_user: dict = Depends(get_current_user)):
     )
 
 
-@app.post("/api/query", response_model=QueryResponse, tags=["Query"])
-async def query_engine(request: QueryRequest, _user: dict = Depends(get_current_user)):
+@app.post(
+    "/api/query",
+    response_model=QueryResponse,
+    responses={200: {"content": {"text/event-stream": {"schema": {"type": "string"}}}}},
+    tags=["Query"],
+)
+async def query_engine(
+    request: QueryRequest,
+    http_request: Request,
+    _user: dict = Depends(get_current_user),
+):
     """
     Main query endpoint. Runs the LangGraph pipeline and returns
     the answer + full reasoning trace for sidebar display.
@@ -374,6 +442,16 @@ async def query_engine(request: QueryRequest, _user: dict = Depends(get_current_
         raise HTTPException(
             status_code=503,
             detail="No documents ingested yet. Please upload PDF/DOCX files first.",
+        )
+
+    if "text/event-stream" in http_request.headers.get("accept", "").lower():
+        return StreamingResponse(
+            _stream_query_response(request.query, http_request),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
         )
 
     try:

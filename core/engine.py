@@ -4,8 +4,9 @@ Routes queries between Vector DB and Knowledge Graph, then generates answers.
 """
 
 import re
+import threading
 import time
-from typing import TypedDict, Literal
+from typing import Callable, TypedDict, Literal
 
 from langgraph.graph import StateGraph, START, END
 
@@ -33,6 +34,8 @@ class QueryState(TypedDict):
     context: str                   # Retrieved context (from either source)
     response: str                  # Final LLM-generated answer
     reasoning_trace: list[dict]    # Step-by-step audit trail for the UI
+    on_chunk: Callable[[str], bool] | None
+    cancel_event: threading.Event | None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -150,16 +153,61 @@ def generate_answer(state: QueryState) -> dict:
 
     system_prompt = GENERATOR_SYSTEM_PROMPT.format(context=state["context"])
 
-    res = client.chat.completions.create(
-        model=SYNTHESISER_MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": state["query"]},
-        ],
-        max_tokens=SYNTHESIS_MAX_TOKENS,
-        temperature=TEMPERATURE,
-    )
-    answer = res.choices[0].message.content.strip()
+    on_chunk = state.get("on_chunk")
+    if on_chunk is None:
+        res = client.chat.completions.create(
+            model=SYNTHESISER_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": state["query"]},
+            ],
+            max_tokens=SYNTHESIS_MAX_TOKENS,
+            temperature=TEMPERATURE,
+        )
+        answer = res.choices[0].message.content.strip()
+    else:
+        answer_parts = []
+        cancel_event = state.get("cancel_event")
+        with client.chat.completions.create(
+            model=SYNTHESISER_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": state["query"]},
+            ],
+            max_tokens=SYNTHESIS_MAX_TOKENS,
+            temperature=TEMPERATURE,
+            stream=True,
+        ) as stream:
+            finished = threading.Event()
+            stream_cancelled = threading.Event()
+            watcher = None
+            if cancel_event is not None:
+                def close_stream_on_cancel():
+                    while not finished.wait(0.1):
+                        if cancel_event.is_set():
+                            stream_cancelled.set()
+                            stream.close()
+                            return
+
+                watcher = threading.Thread(target=close_stream_on_cancel, daemon=True)
+                watcher.start()
+            try:
+                for chunk in stream:
+                    if not chunk.choices:
+                        continue
+                    text = chunk.choices[0].delta.content
+                    if text:
+                        answer_parts.append(text)
+                        if on_chunk(text):
+                            break
+            except Exception:
+                if not stream_cancelled.is_set():
+                    raise
+            finally:
+                finished.set()
+                if watcher is not None:
+                    watcher.join(timeout=0.2)
+        answer = "".join(answer_parts).strip()
 
     elapsed = round(time.time() - t0, 2)
 
@@ -233,7 +281,11 @@ def build_graph() -> StateGraph:
 graph = build_graph()
 
 
-def run_query(query: str) -> dict:
+def run_query(
+    query: str,
+    on_chunk: Callable[[str], bool] | None = None,
+    cancel_event: threading.Event | None = None,
+) -> dict:
     """
     Execute a full query through the LangGraph pipeline.
     
@@ -249,7 +301,11 @@ def run_query(query: str) -> dict:
         "context": "",
         "response": "",
         "reasoning_trace": [],
+        "on_chunk": on_chunk,
+        "cancel_event": cancel_event,
     }
 
     result = graph.invoke(initial_state)
+    result.pop("on_chunk", None)
+    result.pop("cancel_event", None)
     return result
