@@ -1,10 +1,35 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
    Local Agentic GraphRAG — God-Level ChatGPT Interface
-   Includes: Dark & Light Mode, Authentic OpenAI Sans Typography,
-   Chat History, Collapsible Reasoning Accordion & Print-to-PDF styles.
+   Typography: Authentic OpenAI Sans (codex_unpacked)
+   Themes: Dark (#212121) & Light (#ffffff)
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-/* Authentic OpenAI Sans Fonts from codex_unpacked */
+/* ── Authentic OpenAI Sans @font-face ─────────────────────────────────────── */
+@font-face {
+  font-family: 'OpenAI Sans';
+  src: url('./assets/fonts/OpenAISans-Regular-c56711d328c4.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenAI Sans';
+  src: url('./assets/fonts/OpenAISans-Medium-7b9c963f9063.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OpenAI Sans';
+  src: url('./assets/fonts/OpenAISans-Semibold-e259229c5327.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Alias OpenAISans for zero-fail fallback */
 @font-face {
   font-family: 'OpenAISans';
   src: url('./assets/fonts/OpenAISans-Regular-c56711d328c4.woff2') format('woff2');
@@ -29,10 +54,10 @@
   font-display: swap;
 }
 
-/* ── Theme Definitions ─────────────────────────────────────────────────────── */
+/* ── Theme Tokens ──────────────────────────────────────────────────────────── */
 
 :root {
-  /* Default: Dark Theme (Authentic ChatGPT) */
+  /* Dark Theme (Default) */
   --bg-main: #212121;
   --bg-sidebar: #171717;
   --bg-surface: #2f2f2f;
@@ -64,12 +89,12 @@
 
   --sidebar-width: 275px;
   --chat-max-width: 48rem; /* 768px */
-  --font-sans: 'OpenAISans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "OpenAI Sans", "OpenAISans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: 'Consolas', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 [data-theme="light"] {
-  /* Light Theme (Authentic ChatGPT Light) */
+  /* Light Theme */
   --bg-main: #ffffff;
   --bg-sidebar: #f9f9f9;
   --bg-surface: #f3f3f3;
@@ -91,17 +116,18 @@
   --openai-green-hover: #0d8a6b;
   --accent-purple: #9333ea;
   --accent-cyan: #0284c7;
-  --accent-glow: rgba(16, 163, 127, 0.15);
+  --accent-glow: rgba(16, 163, 127, 0.12);
 }
 
-* {
+/* Force apply OpenAI Sans across all elements */
+*, html, body, button, input, textarea, select {
+  font-family: var(--font-sans) !important;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: var(--font-sans);
   background-color: var(--bg-main);
   color: var(--text-primary);
   height: 100vh;
@@ -120,7 +146,7 @@ body {
   position: relative;
 }
 
-/* ── Left Sidebar ──────────────────────────────────────────────────────────── */
+/* ── Left Sidebar (Pinned Left Telemetry) ──────────────────────────────────── */
 
 .sidebar {
   width: var(--sidebar-width);
@@ -158,7 +184,7 @@ body {
 }
 
 .brand-name {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--text-primary);
@@ -172,11 +198,10 @@ body {
   background: transparent;
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-radius: var(--radius-md);
   font-size: 0.86rem;
   font-weight: 500;
-  font-family: var(--font-sans);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -186,20 +211,86 @@ body {
   border-color: var(--border-medium);
 }
 
+/* ── Pinned Left Engine Telemetry (PROMINENT ON LEFT SIDE) ─────────────────── */
+
+.sidebar-telemetry-panel {
+  padding: 10px 14px;
+  background: rgba(16, 163, 127, 0.04);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.telemetry-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.telemetry-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 500;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+.dot.online {
+  background-color: var(--openai-green);
+  box-shadow: 0 0 8px rgba(16, 163, 127, 0.8);
+}
+
+.dot.offline {
+  background-color: #ef4444;
+}
+
+.telemetry-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.telem-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.telem-val {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* ── Scrollable Middle Section: Chat History ──────────────────────────────── */
+
 .sidebar-scrollable {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.sidebar-section {
-  padding: 0 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
 .sidebar-label {
@@ -208,11 +299,10 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   padding: 0 4px;
 }
 
-/* Chat History List */
 .history-list {
   display: flex;
   flex-direction: column;
@@ -225,12 +315,11 @@ body {
   justify-content: space-between;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
-  font-size: 0.83rem;
+  font-size: 0.84rem;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
-  position: relative;
 }
 
 .history-item:hover {
@@ -272,13 +361,20 @@ body {
   background-color: rgba(239, 68, 68, 0.1);
 }
 
-/* Multi-Format Upload Dropzone */
+/* ── Multi-Format Upload Section & Progress ───────────────────────────────── */
+
+.sidebar-upload-section {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
 .dropzone {
   border: 1px dashed var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 10px 12px;
   text-align: center;
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(125, 125, 125, 0.03);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -289,51 +385,50 @@ body {
 }
 
 .dropzone-icon {
-  width: 22px;
-  height: 22px;
-  margin: 0 auto 6px auto;
+  width: 18px;
+  height: 18px;
+  margin: 0 auto 3px auto;
   color: var(--text-secondary);
 }
 
 .dropzone-text {
-  font-size: 0.77rem;
+  font-size: 0.74rem;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .dropzone-sub {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
-/* Ingestion Progress Card */
+/* Progress card */
 .progress-card {
   background-color: rgba(16, 163, 127, 0.08);
   border: 1px solid rgba(16, 163, 127, 0.25);
   border-radius: var(--radius-md);
-  padding: 10px 12px;
-  margin-top: 4px;
+  padding: 8px 10px;
+  margin-top: 6px;
   display: none;
 }
 
 .progress-card.active {
   display: block;
-  animation: fadeIn 0.3s ease;
 }
 
 .progress-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--openai-green);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .progress-bar-bg {
-  height: 5px;
+  height: 4px;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
@@ -348,57 +443,43 @@ body {
 }
 
 .progress-desc {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-secondary);
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
-/* Telemetry Section (Cleanly on Left Side) */
-.telemetry-card {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.telemetry-item {
+/* Sidebar Footer (Clean Actions: Export PDF) */
+.sidebar-footer {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.74rem;
-  color: var(--text-secondary);
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.status-indicator {
-  display: inline-flex;
+.sidebar-action-btn {
+  display: flex;
   align-items: center;
   gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  justify-content: center;
 }
 
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--text-muted);
-}
-
-.dot.online {
-  background-color: var(--openai-green);
-  box-shadow: 0 0 8px rgba(16, 163, 127, 0.8);
-}
-
-.dot.offline {
-  background-color: #ef4444;
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 12px 14px;
-  border-top: 1px solid var(--border-subtle);
+.sidebar-action-btn:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-medium);
 }
 
 /* ── Main Chat Container ───────────────────────────────────────────────────── */
@@ -449,7 +530,7 @@ body {
   color: var(--text-primary);
 }
 
-/* Authentic Model Pill Selector */
+/* Model Selector Pill */
 .model-pill {
   display: flex;
   align-items: center;
@@ -491,33 +572,10 @@ body {
   border-radius: var(--radius-pill);
 }
 
-/* Top-Right Header Actions (Theme Toggle & PDF Export) */
+/* Top Right Header: ONLY Theme Toggle (Clean, NO PDF upload on right!) */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.action-pill-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  padding: 6px 12px;
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: var(--font-sans);
-}
-
-.action-pill-btn:hover {
-  background-color: var(--bg-surface-hover);
-  color: var(--text-primary);
-  border-color: var(--border-medium);
 }
 
 /* Chat Viewport */
@@ -650,7 +708,7 @@ body {
   flex-shrink: 0;
 }
 
-.assistant-avatar svg {
+.assistant-avatar svg, .assistant-avatar img {
   width: 100%;
   height: 100%;
 }
@@ -663,7 +721,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Markdown Formatting */
 .assistant-body p {
   margin-bottom: 12px;
 }
@@ -875,7 +932,6 @@ body {
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-family: var(--font-sans);
   font-size: 0.93rem;
   line-height: 1.45;
   resize: none;

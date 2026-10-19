@@ -5,8 +5,14 @@ Serves the LangGraph engine + dynamic file upload/ingestion. Fully local.
 
 import sys
 import shutil
+import mimetypes
 from pathlib import Path
 from contextlib import asynccontextmanager
+
+# Register modern web font and asset MIME types (essential for Windows)
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/woff", ".woff")
+mimetypes.add_type("image/svg+xml", ".svg")
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
