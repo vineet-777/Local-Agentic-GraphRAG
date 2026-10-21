@@ -81,6 +81,10 @@ The Streamlit UI does not include document upload or ingestion monitoring. The a
 
 | Endpoint | Method | Description |
 |---|---|---|
+| `/api/conversations` | GET | List the signed-in user's conversations (bearer token required) |
+| `/api/conversations/{id}` | GET | Load an owned conversation with message traces (bearer token required) |
+| `/api/conversations/{id}` | PATCH | Rename an owned conversation (bearer token required) |
+| `/api/conversations/{id}` | DELETE | Delete an owned conversation (bearer token required) |
 | `/api/auth/signup` | POST | Create an account and return a session token |
 | `/api/auth/signin` | POST | Authenticate and return a session token |
 | `/api/auth/me` | GET | Return the signed-in user (Bearer token required) |
@@ -95,6 +99,7 @@ Signup and sign-in return an opaque bearer token that expires after seven days. 
 ## Features
 
 - **API-Based Ingestion**: Authenticated upload endpoints add data without overwriting existing records
+- **Persistent Chat History**: Per-user conversations with searchable sidebar history, rename, delete, and restored provenance traces
 - **Dual Retrieval**: Automatic routing between vector search and knowledge graph
 - **Reasoning Trace**: See exactly which path the AI took and what sources it used
 - **Processing Status API**: Poll background file-processing progress

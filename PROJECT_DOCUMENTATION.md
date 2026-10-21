@@ -359,7 +359,8 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 | Schema | Fields | Purpose |
 |---|---|---|
-| `QueryRequest` | `query: str` (1â€“2000 chars) | Query input |
+| `QueryRequest` | `query: str` (1â€“2000 chars), `conversation_id: str | None` | Query input and optional conversation |
+| `RenameConversationRequest` | `title: str` (1â€“80 chars, trimmed) | Conversation rename |
 | `QueryResponse` | `response: str`, `route: str`, `reasoning_trace: list[dict]` | Query result |
 | `HealthResponse` | `status: str`, `lm_studio: dict`, `database: dict` | Health status |
 | `UploadResponse` | `message: str`, `files_accepted: list[str]`, `files_rejected: list[dict]` | Upload result |
@@ -381,8 +382,8 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 #### Key Sections
 
 1. **Custom CSS**: Shared styling for navigation, status badges, query traces, graph, chat, and sidebar
-2. **Session State**: `messages`, `traces`, authentication state, `prompt_seed`, and `graph_cache`
-3. **Sidebar**: Signed-in user, session telemetry, and conversation reset
+2. **Session State**: `messages`, `traces`, `active_conversation_id`, cached `conversations`, authentication state, `prompt_seed`, and `graph_cache`
+3. **Sidebar**: New chat, searchable recency-grouped conversation history, rename/delete actions, signed-in user, and collapsed system status
 4. **Main Area**: Global system status, Query Studio, and Knowledge Graph Explorer
 
 #### API Helper Functions
@@ -390,6 +391,8 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 | Function | Purpose |
 |---|---|
 | `check_health()` | GET `/api/health` â€” supplies global system status |
+| `refresh_conversations()` | GET `/api/conversations` â€” refreshes the per-session sidebar cache |
+| `load_conversation(conversation_id)` | GET `/api/conversations/{id}` â€” loads messages and assistant reasoning traces |
 | `load_graph_data()` | Loads and caches the persisted knowledge graph for the explorer |
 
 
@@ -492,10 +495,12 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 **Request:**
 ```json
 {
-  "query": "What is local graph rag?"
+  "query": "What is local graph rag?",
+  "conversation_id": null
 }
 ```
 - `query`: string, 1â€“2000 characters
+- `conversation_id`: optional conversation id; omit or pass `null` to create a conversation on the first message
 
 **Response (200):**
 ```json
@@ -541,7 +546,10 @@ event: token
 data: {"text":"Local GraphRAG"}
 ```
 
-The final `complete` event contains the selected route and full reasoning trace.
+The final `complete` event contains the selected route, full reasoning trace,
+`conversation_id`, and conversation `title`. The user message is stored before
+generation; the assistant response and trace are stored only after successful
+completion. Conversation history is not passed back to the engine.
 An `error` event reports generation failures. Requests that do not ask for
 `text/event-stream` continue to receive the JSON response documented above.
 
@@ -554,7 +562,58 @@ An `error` event reports generation failures. Requests that do not ask for
 
 ---
 
-### 4.5 `GET /`
+### 4.5 `GET /api/conversations`
+
+**Purpose:** List the signed-in user's conversations, newest activity first.
+
+**Authentication:** Bearer token required.
+
+**Response (200):**
+```json
+[
+  {"id": "uuid4hex", "title": "What is GraphRAG?", "updated_at": 1792622400}
+]
+```
+
+### 4.6 `GET /api/conversations/{id}`
+
+**Purpose:** Load an owned conversation, including messages and assistant
+reasoning traces. A conversation owned by another user is indistinguishable
+from a missing conversation and returns 404.
+
+**Response (200):**
+```json
+{
+  "id": "uuid4hex",
+  "title": "What is GraphRAG?",
+  "messages": [
+    {"role": "user", "content": "What is GraphRAG?", "reasoning_trace": []},
+    {"role": "assistant", "content": "GraphRAG combines...", "reasoning_trace": []}
+  ]
+}
+```
+
+### 4.7 `PATCH /api/conversations/{id}`
+
+**Purpose:** Rename an owned conversation. The trimmed title must contain
+1–80 characters.
+
+**Request:** `{"title": "A concise title"}`
+
+**Response (200):** `{"id": "uuid4hex", "title": "A concise title", "updated_at": 1792622400}`
+
+**Errors:** 404 if the conversation does not exist or belongs to another user;
+422 if the title is blank or exceeds 80 characters.
+
+### 4.8 `DELETE /api/conversations/{id}`
+
+**Purpose:** Delete an owned conversation and its messages.
+
+**Response:** 204 No Content.
+
+**Errors:** 404 if the conversation does not exist or belongs to another user.
+
+### 4.9 `GET /`
 
 **Purpose:** Root info endpoint. Returns API version and available endpoint paths.
 
@@ -566,7 +625,8 @@ An `error` event reports generation failures. Requests that do not ask for
     "health": "GET /api/health",
     "upload": "POST /api/upload",
     "upload_status": "GET /api/upload-status",
-    "query": "POST /api/query"
+    "query": "POST /api/query",
+    "conversations": "GET /api/conversations"
   }
 }
 ```
@@ -661,7 +721,18 @@ An `error` event reports generation failures. Requests that do not ask for
 
 ---
 
-### 5.4 QueryState (LangGraph)
+### 5.4 Conversation History (SQLite)
+
+Conversation data is stored in `db/auth.sqlite3` beside accounts and sessions.
+Both tables use foreign keys with cascading deletion; chat API operations always
+scope reads and writes to the authenticated user.
+
+| Table | Fields | Purpose |
+|---|---|---|
+| `conversations` | `id` (UUID4 hex PK), `user_id` (FK to users), `title`, `created_at`, `updated_at` (Unix seconds) | Per-user conversation metadata; indexed by `(user_id, updated_at DESC)` |
+| `messages` | `id` (autoincrement PK), `conversation_id` (FK), `role` (`user` or `assistant`), `content`, `trace_json`, `created_at` (Unix seconds) | Ordered turns and assistant provenance traces |
+
+### 5.5 QueryState (LangGraph)
 
 | Field | Type | Set By | Purpose |
 |---|---|---|---|

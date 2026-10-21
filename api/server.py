@@ -17,7 +17,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, D
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # Ensure project root is on sys.path so `core.*` imports work
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -44,6 +44,15 @@ from api.auth import (
     get_current_user,
     initialize_auth_store,
     revoke_session,
+)
+from api.chats import (
+    append_message,
+    create_conversation,
+    delete_conversation,
+    get_conversation_with_messages,
+    initialize_chat_store,
+    list_conversations,
+    rename_conversation,
 )
 
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -132,6 +141,7 @@ def _process_uploaded_files(file_paths: list[Path]):
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
     initialize_auth_store()
+    initialize_chat_store()
     lm_status = is_lm_studio_running()
     db_status = is_db_ready()
     print("=" * 60)
@@ -170,6 +180,16 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000, description="The user's question")
+    conversation_id: str | None = None
+
+
+class RenameConversationRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=80)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def strip_title(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
 class SignupRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=80)
@@ -205,6 +225,9 @@ def _sse_event(name: str, data: dict | str) -> str:
 async def _stream_query_response(
     query: str,
     request: Request,
+    user_id: int,
+    conversation_id: str,
+    title: str,
 ) -> AsyncIterator[str]:
     events: queue.Queue[tuple[str, str | dict]] = queue.Queue()
     cancelled = threading.Event()
@@ -225,10 +248,7 @@ async def _stream_query_response(
         except Exception as exc:
             events.put(("error", f"Engine error: {exc}"))
         else:
-            events.put(("complete", {
-                "route": result.get("route", "unknown"),
-                "reasoning_trace": result.get("reasoning_trace", []),
-            }))
+            events.put(("result", result))
 
     worker = threading.Thread(target=execute_query, daemon=True)
     worker.start()
@@ -242,6 +262,23 @@ async def _stream_query_response(
                 continue
             if name == "token":
                 yield _sse_event(name, {"text": data})
+            elif name == "result":
+                if await request.is_disconnected() or cancelled.is_set():
+                    break
+                if not isinstance(data, dict):
+                    yield _sse_event("error", "Engine returned an invalid result.")
+                    break
+                result = data
+                answer = result.get("response", "")
+                trace = result.get("reasoning_trace", [])
+                append_message(user_id, conversation_id, "assistant", answer, trace)
+                yield _sse_event("complete", {
+                    "route": result.get("route", "unknown"),
+                    "reasoning_trace": trace,
+                    "conversation_id": conversation_id,
+                    "title": title,
+                })
+                break
             else:
                 yield _sse_event(name, data)
                 break
@@ -272,6 +309,46 @@ class ProcessingStatusResponse(BaseModel):
 
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
+
+@app.get("/api/conversations", tags=["Conversations"])
+async def get_conversations(user: dict = Depends(get_current_user)):
+    """List the signed-in user's conversations."""
+    return list_conversations(user["id"])
+
+
+@app.get("/api/conversations/{conversation_id}", tags=["Conversations"])
+async def get_conversation(conversation_id: str, user: dict = Depends(get_current_user)):
+    """Load a conversation and its messages when owned by the signed-in user."""
+    conversation = get_conversation_with_messages(user["id"], conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return conversation
+
+
+@app.patch("/api/conversations/{conversation_id}", tags=["Conversations"])
+async def patch_conversation(
+    conversation_id: str,
+    request: RenameConversationRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Rename one of the signed-in user's conversations."""
+    if not request.title:
+        raise HTTPException(status_code=422, detail="Title must not be blank.")
+    conversation = rename_conversation(user["id"], conversation_id, request.title)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return conversation
+
+
+@app.delete("/api/conversations/{conversation_id}", status_code=204, tags=["Conversations"])
+async def remove_conversation(
+    conversation_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Delete one of the signed-in user's conversations."""
+    if not delete_conversation(user["id"], conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+
 
 @app.post("/api/auth/signup", response_model=AuthResponse, status_code=201, tags=["Authentication"])
 async def signup(request: SignupRequest):
@@ -422,7 +499,7 @@ async def get_upload_status(_user: dict = Depends(get_current_user)):
 async def query_engine(
     request: QueryRequest,
     http_request: Request,
-    _user: dict = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     """
     Main query endpoint. Runs the LangGraph pipeline and returns
@@ -444,9 +521,28 @@ async def query_engine(
             detail="No documents ingested yet. Please upload PDF/DOCX files first.",
         )
 
+    if request.conversation_id is None:
+        title_text = " ".join(request.query.split())
+        title = title_text[:40].rstrip()
+        if len(title_text) > 40:
+            title = f"{title}…"
+        conversation = create_conversation(user["id"], title)
+        conversation_id = conversation["id"]
+    else:
+        conversation_id = request.conversation_id
+        conversation = get_conversation_with_messages(user["id"], conversation_id)
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found.")
+        title = conversation["title"]
+
+    append_message(user["id"], conversation_id, "user", request.query)
+    # TODO: pass history to run_query
+
     if "text/event-stream" in http_request.headers.get("accept", "").lower():
         return StreamingResponse(
-            _stream_query_response(request.query, http_request),
+            _stream_query_response(
+                request.query, http_request, user["id"], conversation_id, title
+            ),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -456,10 +552,15 @@ async def query_engine(
 
     try:
         result = run_query(request.query)
+        trace = result.get("reasoning_trace", [])
+        append_message(
+            user["id"], conversation_id, "assistant",
+            result.get("response", "No response generated."), trace,
+        )
         return QueryResponse(
             response=result.get("response", "No response generated."),
             route=result.get("route", "unknown"),
-            reasoning_trace=result.get("reasoning_trace", []),
+            reasoning_trace=trace,
         )
     except Exception as e:
         raise HTTPException(

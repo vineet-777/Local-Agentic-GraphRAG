@@ -9,7 +9,9 @@ Air-Gapped Engineering Studio Architecture:
 
 import sys
 import json
+import html
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import streamlit as st
@@ -30,6 +32,7 @@ API_AUTH_SIGNUP = f"{API_BASE}/api/auth/signup"
 API_AUTH_SIGNIN = f"{API_BASE}/api/auth/signin"
 API_AUTH_ME = f"{API_BASE}/api/auth/me"
 API_AUTH_LOGOUT = f"{API_BASE}/api/auth/logout"
+API_CONVERSATIONS = f"{API_BASE}/api/conversations"
 
 GRAPH_FILE_PATH = PROJECT_ROOT / "db" / "graph.json"
 
@@ -99,12 +102,67 @@ st.markdown("""
         background-color: var(--bg-base);
     }
 
-    /* Hide default white Streamlit header */
+    /* Keep the 1.56 sidebar controls visible without the default toolbar. */
     header[data-testid="stHeader"] {
+        height: 2.5rem;
+        min-height: 2.5rem;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+        z-index: 1000;
+    }
+    header[data-testid="stHeader"] [data-testid="stAppDeployButton"],
+    header[data-testid="stHeader"] [data-testid="stMainMenu"] {
         display: none !important;
     }
     [data-testid="stSidebarHeader"] {
-        display: none !important;
+        display: flex !important;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        padding: 0;
+        overflow: visible;
+        border: 0;
+        position: relative;
+    }
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebarExpandButton"] {
+        position: absolute !important;
+        top: 0.25rem;
+        right: 0.25rem;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001;
+    }
+    [data-testid="stSidebarCollapseButton"] button,
+    [data-testid="stSidebarExpandButton"] button,
+    button[data-testid="stExpandSidebarButton"],
+    [data-testid="collapsedControl"] button,
+    [data-testid="stSidebarCollapsedControl"] button {
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: var(--text-secondary) !important;
+        background: var(--bg-surface) !important;
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: var(--radius-sm) !important;
+        z-index: 1001;
+    }
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapsedControl"] {
+        position: fixed !important;
+        top: 0.3rem;
+        left: 0.3rem;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001;
+    }
+    button[data-testid="stExpandSidebarButton"] {
+        position: fixed !important;
+        top: 0.5rem !important;
+        left: 0.5rem !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1001;
     }
 
     /* Streamlit block container width and spacing */
@@ -249,32 +307,67 @@ st.markdown("""
     }
 
     section[data-testid="stSidebar"] .block-container {
-        padding-top: 1.25rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        height: 100%;
+        min-height: calc(100vh - 1rem);
+        padding: 0.75rem 0.65rem 0.6rem;
+        gap: 0.15rem;
+    }
+    section[data-testid="stSidebar"],
+    section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+        overflow: visible !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        min-height: 0;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding-bottom: 0 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div {
+        display: flex;
+        flex: 1 1 100%;
+        flex-direction: column;
+        height: 100% !important;
+        min-height: 0;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"] {
+        display: flex;
+        flex: 1 1 100% !important;
+        flex-direction: column;
+        min-height: 100%;
+        height: 100%;
     }
 
     .sidebar-user-card {
-        padding: 0.85rem;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
-        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.35rem 0.15rem;
     }
 
     .user-name {
         font-family: var(--font-heading);
         font-weight: 600;
-        font-size: 0.88rem;
+        font-size: 0.8rem;
         color: var(--text-primary);
     }
 
     .user-email {
         font-family: var(--font-mono);
-        font-size: 0.72rem;
+        font-size: 0.62rem;
         color: var(--text-muted);
         overflow-wrap: anywhere;
-        margin-top: 0.15rem;
+        margin-top: 0.08rem;
     }
 
     .sidebar-section-header {
@@ -285,6 +378,208 @@ st.markdown("""
         color: var(--text-muted);
         margin: 1.2rem 0 0.5rem 0;
         font-weight: 600;
+    }
+
+    .sidebar-brand-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.15rem 0.25rem 0.7rem;
+        font-family: var(--font-heading);
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+    }
+    .sidebar-brand-mark {
+        color: var(--accent-vector);
+        font-size: 1.15rem;
+    }
+    .sidebar-avatar {
+        width: 2rem;
+        height: 2rem;
+        flex: 0 0 2rem;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--accent-vector-border);
+        border-radius: 50%;
+        background: var(--accent-vector-bg);
+        color: var(--accent-vector);
+        font: 600 0.67rem var(--font-mono);
+    }
+    .st-key-new_chat button {
+        min-height: 2.25rem;
+        justify-content: flex-start;
+        padding-left: 0.7rem;
+        background: transparent !important;
+        border: 1px solid var(--border-medium) !important;
+        border-radius: var(--radius-md) !important;
+        color: var(--text-primary) !important;
+        font-size: 0.83rem;
+    }
+    .st-key-new_chat button:hover {
+        background: var(--bg-elevated) !important;
+        border-color: var(--border-medium) !important;
+    }
+    .st-key-chat_list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-medium) transparent;
+        padding-right: 0.1rem;
+    }
+    .st-key-chat_list::-webkit-scrollbar { width: 5px; }
+    .st-key-chat_list::-webkit-scrollbar-thumb {
+        background: var(--border-medium);
+        border-radius: 8px;
+    }
+    .chat-group-label {
+        margin: 0.85rem 0 0.28rem;
+        padding-left: 0.35rem;
+        color: var(--text-muted);
+        font: 500 0.61rem var(--font-mono);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+    }
+    section[data-testid="stSidebar"] .stButton button {
+        min-height: 2rem;
+        padding: 0.32rem 0.45rem;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 0.79rem;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        box-shadow: none;
+    }
+    section[data-testid="stSidebar"] .stButton button:hover {
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+        border-color: transparent;
+    }
+    section[data-testid="stSidebar"] .stButton button:focus-visible {
+        outline: 1px solid var(--accent-vector);
+        outline-offset: 1px;
+    }
+    section[data-testid="stSidebar"] [data-testid="stPopover"] > button {
+        min-width: 1.7rem;
+        width: 1.7rem;
+        min-height: 1.8rem;
+        padding: 0;
+        font-size: 1rem;
+        text-align: center;
+    }
+    .st-key-chat_active_row {
+        padding-left: 0.25rem;
+        border-left: 2px solid var(--accent-vector);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        background: var(--accent-vector-bg);
+    }
+    .st-key-chat_active_row .stButton button {
+        color: var(--text-primary);
+    }
+    .st-key-sidebar_footer {
+        flex: 0 0 auto;
+        padding-top: 0.4rem;
+        background: var(--bg-surface);
+        border-top: 1px solid var(--border-subtle);
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
+    [data-testid="stLayoutWrapper"]:has(> .stVerticalBlock.st-key-sidebar_footer) {
+        margin-top: auto !important;
+    }
+    .st-key-profile_menu [data-testid="stPopoverButton"] {
+        width: 100%;
+        min-height: 2.5rem;
+        justify-content: flex-start;
+        padding: 0.35rem 0.55rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: var(--text-primary);
+        font-family: var(--font-heading);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-align: left;
+        transition: background 120ms ease, border-color 120ms ease;
+    }
+    .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] {
+        display: none;
+    }
+    .st-key-profile_menu [data-testid="stPopoverButton"]:hover {
+        background: var(--bg-elevated);
+        border-color: var(--border-subtle);
+    }
+    .st-key-profile_menu [data-testid="stPopoverButton"]:focus-visible {
+        outline: 1px solid var(--accent-vector);
+        outline-offset: 1px;
+    }
+    .st-key-profile_menu [data-testid="stPopoverButton"]::after {
+        content: "⌃";
+        margin-left: auto;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+    }
+    body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content),
+    body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
+        z-index: 1100;
+        overflow: visible;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-md);
+        background: var(--bg-elevated);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+        transition:
+            opacity 120ms ease,
+            transform 120ms ease,
+            display 120ms allow-discrete;
+    }
+    body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content) {
+        min-width: 13rem;
+        transform-origin: bottom center;
+    }
+    body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
+        position: fixed !important;
+        position-anchor: --system-status-trigger;
+        position-area: right;
+        position-try-fallbacks: flip-inline;
+        min-width: 15rem;
+        left: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        transform-origin: top left;
+        margin-left: 0.45rem;
+    }
+    .st-key-system_status_popup [data-testid="stPopoverButton"] {
+        anchor-name: --system-status-trigger;
+        width: 100%;
+        min-height: 2rem;
+        justify-content: flex-start;
+        padding: 0.32rem 0.45rem;
+        text-align: left;
+    }
+    .st-key-profile_menu .stButton button {
+        width: 100%;
+        min-height: 2rem;
+        justify-content: flex-start;
+        padding: 0.32rem 0.45rem;
+    }
+    @starting-style {
+        body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content),
+        body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
+            opacity: 0;
+            transform: translateY(4px) scale(0.98);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content),
+        body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
+            transition: none;
+        }
     }
 
     /* ─── Query Studio: Provenance & Route Badges ──────────────────────── */
@@ -665,6 +960,16 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "traces" not in st.session_state:
     st.session_state.traces = {}
+if "active_conversation_id" not in st.session_state:
+    st.session_state.active_conversation_id = None
+if "conversations" not in st.session_state:
+    st.session_state.conversations = None
+if "conversations_error" not in st.session_state:
+    st.session_state.conversations_error = False
+if "rename_target" not in st.session_state:
+    st.session_state.rename_target = None
+if "delete_confirm_target" not in st.session_state:
+    st.session_state.delete_confirm_target = None
 if "access_token" not in st.session_state:
     st.session_state.access_token = None
 if "current_user" not in st.session_state:
@@ -687,6 +992,11 @@ def clear_session():
     st.session_state.current_user = None
     st.session_state.messages = []
     st.session_state.traces = {}
+    st.session_state.active_conversation_id = None
+    st.session_state.conversations = None
+    st.session_state.conversations_error = False
+    st.session_state.rename_target = None
+    st.session_state.delete_confirm_target = None
     st.session_state.graph_cache = None
 
 def expire_session():
@@ -698,6 +1008,11 @@ def save_auth_response(response):
     data = response.json()
     st.session_state.access_token = data["access_token"]
     st.session_state.current_user = data["user"]
+    st.session_state.active_conversation_id = None
+    st.session_state.messages = []
+    st.session_state.traces = {}
+    st.session_state.conversations = None
+    st.session_state.conversations_error = False
     st.session_state.auth_error = None
     st.rerun()
 
@@ -718,6 +1033,52 @@ def check_health():
     except Exception:
         pass
     return None
+
+def refresh_conversations():
+    try:
+        response = requests.get(API_CONVERSATIONS, headers=auth_headers(), timeout=5)
+        if response.status_code == 401:
+            expire_session()
+        if response.status_code == 200:
+            st.session_state.conversations = response.json()
+            st.session_state.conversations_error = False
+        else:
+            st.session_state.conversations = []
+            st.session_state.conversations_error = True
+    except requests.RequestException:
+        st.session_state.conversations = []
+        st.session_state.conversations_error = True
+
+def load_conversation(conversation_id: str) -> bool:
+    try:
+        response = requests.get(
+            f"{API_CONVERSATIONS}/{conversation_id}",
+            headers=auth_headers(),
+            timeout=10,
+        )
+        if response.status_code == 401:
+            expire_session()
+        if response.status_code != 200:
+            st.sidebar.error(response_detail(response))
+            return False
+        conversation = response.json()
+        messages = conversation.get("messages", [])
+        st.session_state.messages = [
+            {"role": message["role"], "content": message["content"]}
+            for message in messages
+        ]
+        st.session_state.traces = {
+            index: message.get("reasoning_trace", [])
+            for index, message in enumerate(messages)
+            if message.get("role") == "assistant" and message.get("reasoning_trace")
+        }
+        st.session_state.active_conversation_id = conversation_id
+        st.session_state.rename_target = None
+        st.session_state.delete_confirm_target = None
+        return True
+    except requests.RequestException:
+        st.sidebar.error("Couldn't load this conversation.")
+        return False
 
 def load_graph_data() -> dict:
     if st.session_state.graph_cache is not None:
@@ -859,6 +1220,10 @@ if not st.session_state.access_token:
     render_auth_page()
     st.stop()
 
+# Load once per session-state cache invalidation, not on every Streamlit rerun.
+if st.session_state.conversations is None:
+    refresh_conversations()
+
 # ─── Live Telemetry Probe ─────────────────────────────────────────────────────
 
 health = check_health()
@@ -872,36 +1237,207 @@ graph_edge_count = db_info.get("graph_edges", 0)
 
 with st.sidebar:
     user = st.session_state.get("current_user") or {}
-    st.markdown(f"""
-    <div class="sidebar-user-card">
-        <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted); letter-spacing:0.07em;">AUTHENTICATED OPERATOR</div>
-        <div class="user-name">{user.get('name', 'Operator')}</div>
-        <div class="user-email">{user.get('email', '')}</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if st.button("Sign Out of Session", use_container_width=True):
-        try:
-            requests.post(API_AUTH_LOGOUT, headers=auth_headers(), timeout=5)
-        except Exception:
-            pass
-        clear_session()
-        st.rerun()
-
-    st.markdown('<div class="sidebar-section-header">Session Telemetry</div>', unsafe_allow_html=True)
-    total_queries = len(st.session_state.messages) // 2
-    st.markdown(f"""
-    <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-secondary); line-height:1.7;">
-        <div>Conversations: <strong style="color:var(--text-primary);">{total_queries}</strong></div>
-        <div>Indexed Entities: <strong style="color:var(--accent-graph);">{graph_node_count}</strong></div>
-        <div>Relationships: <strong style="color:var(--accent-graph);">{graph_edge_count}</strong></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.button("Reset Conversation Context", use_container_width=True):
+    st.markdown(
+        '<div class="sidebar-brand-row"><span class="sidebar-brand-mark">◈</span>'
+        '<span>Local GraphRAG</span></div>',
+        unsafe_allow_html=True,
+    )
+    if st.button("＋  New chat", key="new_chat", use_container_width=True):
+        st.session_state.active_conversation_id = None
         st.session_state.messages = []
         st.session_state.traces = {}
+        st.session_state.rename_target = None
+        st.session_state.delete_confirm_target = None
         st.rerun()
+
+    chat_search = st.text_input(
+        "Search chats",
+        placeholder="Search chats",
+        label_visibility="collapsed",
+        key="chat_search",
+    )
+    conversations = st.session_state.conversations or []
+    if st.session_state.conversations_error:
+        st.caption("Couldn't load chats")
+    elif not conversations:
+        st.markdown(
+            '<div style="padding:0.7rem 0.35rem;color:var(--text-muted);font-size:0.75rem;">'
+            "No conversations yet</div>",
+            unsafe_allow_html=True,
+        )
+    else:
+        today = datetime.now().date()
+        grouped_conversations = {
+            "Today": [],
+            "Yesterday": [],
+            "Previous 7 Days": [],
+            "Older": [],
+        }
+        for conversation in conversations:
+            title = conversation.get("title", "")
+            if chat_search and chat_search.casefold() not in title.casefold():
+                continue
+            updated = datetime.fromtimestamp(conversation["updated_at"]).date()
+            if updated == today:
+                group = "Today"
+            elif updated == today - timedelta(days=1):
+                group = "Yesterday"
+            elif updated >= today - timedelta(days=7):
+                group = "Previous 7 Days"
+            else:
+                group = "Older"
+            grouped_conversations[group].append(conversation)
+
+        with st.container(key="chat_list"):
+            for group_name, group_conversations in grouped_conversations.items():
+                if not group_conversations:
+                    continue
+                st.markdown(
+                    f'<div class="chat-group-label">{group_name}</div>',
+                    unsafe_allow_html=True,
+                )
+                for conversation in group_conversations:
+                    conversation_id = conversation["id"]
+                    active = conversation_id == st.session_state.active_conversation_id
+                    row_context = st.container(
+                        key="chat_active_row" if active else f"chat_row_{conversation_id}"
+                    )
+                    with row_context:
+                        title_col, actions_col = st.columns([0.84, 0.16], gap="small")
+                        with title_col:
+                            if st.button(
+                                conversation["title"],
+                                key=f"chat_select_{conversation_id}",
+                                use_container_width=True,
+                            ):
+                                if load_conversation(conversation_id):
+                                    st.rerun()
+                        with actions_col:
+                            with st.popover("⋯", key=f"chat_actions_{conversation_id}"):
+                                if st.session_state.rename_target == conversation_id:
+                                    renamed_title = st.text_input(
+                                        "Rename",
+                                        value=conversation["title"],
+                                        max_chars=80,
+                                        key=f"chat_rename_input_{conversation_id}",
+                                    )
+                                    if st.button(
+                                        "Save",
+                                        key=f"chat_rename_save_{conversation_id}",
+                                        use_container_width=True,
+                                    ):
+                                        try:
+                                            response = requests.patch(
+                                                f"{API_CONVERSATIONS}/{conversation_id}",
+                                                json={"title": renamed_title},
+                                                headers=auth_headers(),
+                                                timeout=5,
+                                            )
+                                            if response.status_code == 401:
+                                                expire_session()
+                                            if response.status_code == 200:
+                                                st.session_state.rename_target = None
+                                                refresh_conversations()
+                                                st.rerun()
+                                            else:
+                                                st.sidebar.error(response_detail(response))
+                                        except requests.RequestException:
+                                            st.sidebar.error("Couldn't rename this conversation.")
+                                elif st.button(
+                                    "Rename",
+                                    key=f"chat_rename_{conversation_id}",
+                                    use_container_width=True,
+                                ):
+                                    st.session_state.rename_target = conversation_id
+                                    st.rerun()
+
+                                if st.session_state.delete_confirm_target == conversation_id:
+                                    if st.button(
+                                        "Confirm delete",
+                                        key=f"chat_delete_confirm_{conversation_id}",
+                                        use_container_width=True,
+                                    ):
+                                        try:
+                                            response = requests.delete(
+                                                f"{API_CONVERSATIONS}/{conversation_id}",
+                                                headers=auth_headers(),
+                                                timeout=5,
+                                            )
+                                            if response.status_code == 401:
+                                                expire_session()
+                                            if response.status_code == 204:
+                                                if st.session_state.active_conversation_id == conversation_id:
+                                                    st.session_state.active_conversation_id = None
+                                                    st.session_state.messages = []
+                                                    st.session_state.traces = {}
+                                                st.session_state.delete_confirm_target = None
+                                                st.session_state.rename_target = None
+                                                refresh_conversations()
+                                                st.rerun()
+                                            else:
+                                                st.sidebar.error(response_detail(response))
+                                        except requests.RequestException:
+                                            st.sidebar.error("Couldn't delete this conversation.")
+                                    if st.button(
+                                        "Cancel",
+                                        key=f"chat_delete_cancel_{conversation_id}",
+                                        use_container_width=True,
+                                    ):
+                                        st.session_state.delete_confirm_target = None
+                                        st.rerun()
+                                elif st.button(
+                                    "Delete",
+                                    key=f"chat_delete_{conversation_id}",
+                                    use_container_width=True,
+                                ):
+                                    st.session_state.delete_confirm_target = conversation_id
+                                    st.rerun()
+
+    with st.container(key="sidebar_footer"):
+        name = str(user.get("name", "Operator"))
+        initials = "".join(part[0] for part in name.split()[:2]).upper() or "OP"
+        avatar_letter = initials[0]
+        avatar = (
+            chr(0x24B6 + ord(avatar_letter) - ord("A"))
+            if "A" <= avatar_letter <= "Z"
+            else avatar_letter
+        )
+        profile_label = f"{avatar}  {html.escape(name.upper())}"
+        with st.popover(
+            profile_label,
+            key="profile_menu",
+            use_container_width=True,
+        ):
+            with st.container(key="profile_menu_content"):
+                with st.popover(
+                    "System status",
+                    key="system_status_popup",
+                    icon=":material/monitor_heart:",
+                    use_container_width=True,
+                ):
+                    with st.container(key="system_status_content"):
+                        st.markdown(
+                            f'<div style="font-family:var(--font-mono);font-size:0.72rem;'
+                            f'color:var(--text-secondary);line-height:1.8;">'
+                            f'<div>LM Studio: <strong style="color:{"var(--accent-graph)" if lm_online else "var(--accent-alert)"};">'
+                            f'{"Online" if lm_online else "Offline"}</strong></div>'
+                            f'<div>Indexed entities: <strong style="color:var(--text-primary);">{graph_node_count}</strong></div>'
+                            f'<div>Relationships: <strong style="color:var(--text-primary);">{graph_edge_count}</strong></div>'
+                            "</div>",
+                            unsafe_allow_html=True,
+                        )
+                if st.button(
+                    "Sign out",
+                    key="sign_out",
+                    icon=":material/logout:",
+                    use_container_width=True,
+                ):
+                    try:
+                        requests.post(API_AUTH_LOGOUT, headers=auth_headers(), timeout=5)
+                    except requests.RequestException:
+                        pass
+                    clear_session()
+                    st.rerun()
 
 # ─── Top Global Application Shell Bar ─────────────────────────────────────────
 
@@ -1111,7 +1647,10 @@ with tab_query:
                     t_start = time.time()
                     with requests.post(
                         API_QUERY,
-                        json={"query": chat_prompt},
+                        json={
+                            "query": chat_prompt,
+                            "conversation_id": st.session_state.active_conversation_id,
+                        },
                         headers={**auth_headers(), "Accept": "text/event-stream"},
                         timeout=300,
                         stream=True,
@@ -1133,6 +1672,10 @@ with tab_query:
                                         answer_holder.markdown(answer_text)
                                     elif event_name == "complete":
                                         trace_payload = parsed.get("reasoning_trace", [])
+                                        st.session_state.active_conversation_id = parsed.get(
+                                            "conversation_id",
+                                            st.session_state.active_conversation_id,
+                                        )
                                         stream_complete = True
                                         break
                                     elif event_name == "error":
@@ -1145,9 +1688,11 @@ with tab_query:
                                 msg_idx = len(st.session_state.messages)
                                 st.session_state.traces[msg_idx] = trace_payload
                                 st.session_state.messages.append({"role": "assistant", "content": answer_text.strip()})
+                                refresh_conversations()
                                 st.rerun()
                             elif stream_error:
                                 st.error(f"Inference error: {stream_error}")
+                                refresh_conversations()
                         elif resp.status_code == 401:
                             expire_session()
                         else:
