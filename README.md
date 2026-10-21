@@ -50,9 +50,10 @@ streamlit run ui/app.py
 Then:
 1. Open `http://localhost:8501` in your browser
 2. Create an account or sign in on the welcome screen
-3. Upload PDF/DOCX files via the sidebar
-4. Wait for processing (progress bar shown)
-5. Start chatting!
+3. Ask questions about indexed data in Query Studio
+4. Explore the persisted knowledge graph in Knowledge Graph Explorer
+
+The Streamlit UI does not include document upload or ingestion monitoring. The authenticated upload and status API endpoints remain available to API clients.
 
 ## Project Structure
 
@@ -93,10 +94,10 @@ Signup and sign-in return an opaque bearer token that expires after seven days. 
 
 ## Features
 
-- **Dynamic Ingestion**: Upload files anytime — data is additive, never overwritten
+- **API-Based Ingestion**: Authenticated upload endpoints add data without overwriting existing records
 - **Dual Retrieval**: Automatic routing between vector search and knowledge graph
 - **Reasoning Trace**: See exactly which path the AI took and what sources it used
-- **Progress Tracking**: Real-time progress bar during file processing
+- **Processing Status API**: Poll background file-processing progress
 - **Cold Start Protection**: Clear error messages for missing services or data
 - **Persistent Storage**: All data survives app restarts (stored in `/db/`)
 - **Local Authentication**: SQLite accounts, Argon2 password hashing, expiring and revocable sessions

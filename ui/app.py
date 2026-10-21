@@ -1,19 +1,16 @@
 """
 Local GraphRAG — Production UI/UX Overhaul
 Air-Gapped Engineering Studio Architecture:
-- Multi-Workspace Shell (Query Studio, Graph Explorer, Knowledge Base, Engine Diagnostics)
+- Two-Workspace Shell (Query Studio, Graph Explorer)
 - Interactive Force-Directed Knowledge Graph Explorer (60fps HTML5 Canvas, zero external deps)
 - Real-time Dual-Stream Reasoning Telemetry & Source Provenance Drawer
-- Live Pipeline Status & ChromaDB Chunk Catalog
 - Air-Gapped Authentication & Session Management
 """
 
-import os
 import sys
 import json
 import time
 from pathlib import Path
-from typing import Optional, List, Dict, Any
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -29,15 +26,12 @@ if str(PROJECT_ROOT) not in sys.path:
 API_BASE = "http://127.0.0.1:8000"
 API_QUERY = f"{API_BASE}/api/query"
 API_HEALTH = f"{API_BASE}/api/health"
-API_UPLOAD = f"{API_BASE}/api/upload"
-API_UPLOAD_STATUS = f"{API_BASE}/api/upload-status"
 API_AUTH_SIGNUP = f"{API_BASE}/api/auth/signup"
 API_AUTH_SIGNIN = f"{API_BASE}/api/auth/signin"
 API_AUTH_ME = f"{API_BASE}/api/auth/me"
 API_AUTH_LOGOUT = f"{API_BASE}/api/auth/logout"
 
 GRAPH_FILE_PATH = PROJECT_ROOT / "db" / "graph.json"
-CHROMA_DIR_PATH = PROJECT_ROOT / "db" / "chromadb"
 
 # ─── Page Configuration ───────────────────────────────────────────────────────
 
@@ -80,8 +74,6 @@ st.markdown("""
         --accent-graph-border: rgba(16, 185, 129, 0.25);
         
         --accent-router: #f59e0b;
-        --accent-router-bg: rgba(245, 158, 11, 0.08);
-        --accent-router-border: rgba(245, 158, 11, 0.25);
         
         --accent-alert: #f43f5e;
         --accent-alert-bg: rgba(244, 63, 94, 0.08);
@@ -122,23 +114,6 @@ st.markdown("""
         padding-bottom: 4rem;
         padding-left: 2rem;
         padding-right: 2rem;
-    }
-
-    /* Dark styled file uploaders */
-    [data-testid="stFileUploaderDropzone"] {
-        background: var(--bg-elevated) !important;
-        border: 1px dashed var(--border-medium) !important;
-        border-radius: var(--radius-sm) !important;
-        color: var(--text-secondary) !important;
-    }
-    [data-testid="stFileUploaderDropzone"] span,
-    [data-testid="stFileUploaderDropzone"] small {
-        color: var(--text-muted) !important;
-    }
-    [data-testid="stFileUploaderDropzone"] button {
-        background: var(--bg-surface) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-medium) !important;
     }
 
     /* Headings */
@@ -422,17 +397,6 @@ st.markdown("""
         padding: 1.25rem;
         margin-bottom: 1rem;
     }
-    .tech-card-header {
-        font-family: var(--font-heading);
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
     /* Quick Prompts */
     .prompt-chip {
         display: inline-block;
@@ -687,11 +651,6 @@ st.markdown("""
         color: var(--border-medium);
     }
 
-    /* Progress bar */
-    [data-testid="stProgress"] > div > div {
-        background: var(--accent-vector) !important;
-    }
-
     /* Hide Streamlit "Press Enter to submit form" hint */
     .stTextInput small,
     [data-testid="InputInstructions"] {
@@ -706,12 +665,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "traces" not in st.session_state:
     st.session_state.traces = {}
-if "system_healthy" not in st.session_state:
-    st.session_state.system_healthy = None
-if "health_data" not in st.session_state:
-    st.session_state.health_data = None
-if "upload_triggered" not in st.session_state:
-    st.session_state.upload_triggered = False
 if "access_token" not in st.session_state:
     st.session_state.access_token = None
 if "current_user" not in st.session_state:
@@ -734,7 +687,6 @@ def clear_session():
     st.session_state.current_user = None
     st.session_state.messages = []
     st.session_state.traces = {}
-    st.session_state.upload_triggered = False
     st.session_state.graph_cache = None
 
 def expire_session():
@@ -762,42 +714,10 @@ def check_health():
     try:
         resp = requests.get(API_HEALTH, timeout=4)
         if resp.status_code == 200:
-            data = resp.json()
-            st.session_state.health_data = data
-            st.session_state.system_healthy = data.get("lm_studio", {}).get("running", False)
-            return data
-    except Exception:
-        pass
-    st.session_state.system_healthy = False
-    return None
-
-def get_processing_status():
-    try:
-        resp = requests.get(API_UPLOAD_STATUS, headers=auth_headers(), timeout=5)
-        if resp.status_code == 401:
-            expire_session()
-        if resp.status_code == 200:
             return resp.json()
     except Exception:
         pass
     return None
-
-def upload_files_to_api(files):
-    try:
-        file_tuples = [("files", (f.name, f.getvalue(), "application/octet-stream")) for f in files]
-        resp = requests.post(API_UPLOAD, files=file_tuples, headers=auth_headers(), timeout=30)
-        if resp.status_code == 401:
-            expire_session()
-        if resp.status_code == 200:
-            return resp.json()
-        elif resp.status_code == 409:
-            return {"error": "A background ingestion job is already running. Please wait."}
-        else:
-            return {"error": f"Upload failed: {response_detail(resp)}"}
-    except requests.ConnectionError:
-        return {"error": "Backend API server offline at localhost:8000."}
-    except Exception as e:
-        return {"error": str(e)}
 
 def load_graph_data() -> dict:
     if st.session_state.graph_cache is not None:
@@ -968,43 +888,6 @@ with st.sidebar:
         clear_session()
         st.rerun()
 
-    st.markdown('<div class="sidebar-section-header">Fast Document Ingestion</div>', unsafe_allow_html=True)
-    sidebar_files = st.file_uploader(
-        "Upload Course Docs",
-        type=["pdf", "docx", "doc"],
-        accept_multiple_files=True,
-        key="sb_uploader",
-        help="Files are processed locally into ChromaDB and Knowledge Graph.",
-    )
-    if sidebar_files:
-        st.caption(f"{len(sidebar_files)} document(s) staged.")
-        if st.button("Process & Build Graph", type="primary", use_container_width=True):
-            up_res = upload_files_to_api(sidebar_files)
-            if "error" in up_res:
-                st.error(up_res["error"])
-            else:
-                st.success("Ingestion job started in background.")
-                st.session_state.upload_triggered = True
-                st.session_state.graph_cache = None
-                time.sleep(0.5)
-                st.rerun()
-
-    # Ingestion Monitor
-    proc_status = get_processing_status()
-    if proc_status and proc_status.get("is_processing"):
-        st.markdown('<div class="sidebar-section-header">Pipeline Stage</div>', unsafe_allow_html=True)
-        pct = proc_status.get("progress", 0.0)
-        st.progress(pct, text=f"{int(pct*100)}% — {proc_status.get('stage','').upper()}")
-        st.caption(proc_status.get("message", "Processing chunks..."))
-        time.sleep(2)
-        st.rerun()
-    elif proc_status and proc_status.get("stage") == "done" and st.session_state.upload_triggered:
-        st.success("Knowledge Graph & Vectors Updated!")
-        st.session_state.upload_triggered = False
-        st.session_state.graph_cache = None
-        time.sleep(1)
-        st.rerun()
-
     st.markdown('<div class="sidebar-section-header">Session Telemetry</div>', unsafe_allow_html=True)
     total_queries = len(st.session_state.messages) // 2
     st.markdown(f"""
@@ -1048,13 +931,11 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ─── Master Workspace Navigation (4 Dedicated Workspaces) ─────────────────────
+# ─── Master Workspace Navigation ──────────────────────────────────────────────
 
-tab_query, tab_graph, tab_knowledge, tab_diagnostics = st.tabs([
+tab_query, tab_graph = st.tabs([
     "💬  Query Studio",
-    "🕸️  Knowledge Graph Explorer",
-    "📚  Knowledge Base & Ingestion",
-    "⚡  Engine Diagnostics & Routing"
+    "🕸️  Knowledge Graph Explorer"
 ])
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1085,9 +966,9 @@ with tab_query:
     if not db_ready:
         st.markdown("""
         <div class="tech-card" style="border-left: 3px solid var(--accent-router);">
-            <strong style="color:var(--accent-router);">ℹ️ Knowledge Base Not Indexed</strong>
+            <strong style="color:var(--accent-router);">ℹ️ No Indexed Data Available</strong>
             <div style="color:var(--text-secondary); font-size:0.82rem; margin-top:0.3rem;">
-                No document chunks or graph nodes detected. Upload academic PDF/Word documents using the sidebar or the <strong>Knowledge Base</strong> tab to begin.
+                No document chunks or graph nodes were detected. Query results and graph exploration may be limited until data is indexed.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1097,7 +978,7 @@ with tab_query:
         st.markdown("""
         <div class="tech-card" style="text-align:center; padding: 2.5rem 1.5rem; background: var(--bg-surface);">
             <div style="font-size: 1.8rem; color:var(--accent-vector); margin-bottom:0.5rem;">◈</div>
-            <h4 style="margin-bottom:0.3rem;">Knowledge Base Ready for Investigation</h4>
+            <h4 style="margin-bottom:0.3rem;">Ready for Investigation</h4>
             <p style="color:var(--text-muted); font-size:0.85rem; max-width:540px; margin: 0 auto 1.5rem auto;">
                 Ask technical and conceptual questions. The query router analyzes whether to traverse semantic passages or relational concept triples.
             </p>
@@ -1225,8 +1106,6 @@ with tab_query:
             stream_complete = False
             stream_error = None
             trace_payload = []
-            route_payload = "vector"
-
             with st.spinner("Agent routing & retrieving..."):
                 try:
                     t_start = time.time()
@@ -1253,7 +1132,6 @@ with tab_query:
                                         answer_text += parsed["text"]
                                         answer_holder.markdown(answer_text)
                                     elif event_name == "complete":
-                                        route_payload = parsed.get("route", "vector")
                                         trace_payload = parsed.get("reasoning_trace", [])
                                         stream_complete = True
                                         break
@@ -1299,7 +1177,7 @@ with tab_graph:
     all_edges = graph_data.get("edges", [])
 
     if not all_nodes:
-        st.info("No knowledge graph available on disk. Ingest a document in the Knowledge Base tab to build one.")
+        st.info("No knowledge graph is available on disk.")
     else:
         ctrl1, ctrl2, ctrl3 = st.columns([1.5, 1.2, 1])
         with ctrl1:
@@ -1594,180 +1472,3 @@ with tab_graph:
                 "Object (Target Entity)": t_label,
             })
         st.dataframe(triples_data, use_container_width=True, hide_index=True)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  WORKSPACE 3: KNOWLEDGE BASE & INGESTION WORKSPACE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-with tab_knowledge:
-    st.markdown("""
-    <div style="margin-bottom: 1rem;">
-        <h3 style="font-size:1.1rem; margin-bottom:0.2rem;">Knowledge Base Repository & Dynamic Ingestion</h3>
-        <p style="color:var(--text-secondary); font-size:0.84rem; margin:0;">
-            Manage ingested documents, monitor the extraction pipeline, and inspect raw vector embeddings stored in ChromaDB.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_up, col_info = st.columns([1.2, 0.8], gap="medium")
-    
-    with col_up:
-        st.markdown('<div class="tech-card">', unsafe_allow_html=True)
-        st.markdown("<div class='tech-card-header'><span>Document Upload & Ingestion Dropzone</span><span style='font-size:0.75rem; color:var(--text-muted);'>PDF / DOCX (max 100MB)</span></div>", unsafe_allow_html=True)
-        kb_files = st.file_uploader(
-            "Select academic files",
-            type=["pdf", "docx", "doc"],
-            accept_multiple_files=True,
-            key="kb_uploader",
-        )
-        if kb_files:
-            for f in kb_files:
-                st.caption(f"Staged: {f.name} ({len(f.getvalue())/1024:.1f} KB)")
-            if st.button("Start Extraction Pipeline", type="primary", use_container_width=True):
-                result = upload_files_to_api(kb_files)
-                if "error" in result:
-                    st.error(result["error"])
-                else:
-                    st.success("Files queued for background processing!")
-                    st.session_state.upload_triggered = True
-                    st.session_state.graph_cache = None
-                    time.sleep(0.5)
-                    st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with col_info:
-        st.markdown("""
-        <div class="tech-card">
-            <div class="tech-card-header">Extraction Pipeline Stages</div>
-            <div style="font-size:0.8rem; color:var(--text-secondary); line-height:1.7;">
-                <div><strong>1. Text Parsing:</strong> Extracts text blocks via PyPDF or python-docx.</div>
-                <div><strong>2. Semantic Chunking:</strong> 1000 characters with 200 char overlap.</div>
-                <div><strong>3. Vector Embedding:</strong> Batch-embedded via Nomic Embed Text v1.5.</div>
-                <div><strong>4. Knowledge Graph:</strong> Gemma 4 extracts entity-relationship triples.</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Ingested Documents Inventory & ChromaDB Inspection
-    st.markdown("<h4 style='font-size:0.95rem; margin-top:1rem;'>ChromaDB Vector Chunks Catalog</h4>", unsafe_allow_html=True)
-    
-    # Try reading sample chunks from ChromaDB directly
-    try:
-        from chromadb import PersistentClient
-        chroma_client = PersistentClient(str(CHROMA_DIR_PATH))
-        col_chroma = chroma_client.get_collection("local_graphrag")
-        total_items = col_chroma.count()
-        sample_data = col_chroma.get(limit=10)
-        
-        st.caption(f"Active collection: 'local_graphrag' ({total_items} total chunks embedded). Showing top 10 chunks:")
-        
-        chunks_display = []
-        for i in range(len(sample_data.get("ids", []))):
-            meta = sample_data["metadatas"][i] if sample_data.get("metadatas") else {}
-            doc_text = sample_data["documents"][i] if sample_data.get("documents") else ""
-            chunks_display.append({
-                "Chunk ID": sample_data["ids"][i],
-                "Source Document": meta.get("source", "Unknown"),
-                "Section": meta.get("section", 1),
-                "Length": f"{len(doc_text)} chars",
-                "Content Preview": doc_text[:160] + "..." if len(doc_text) > 160 else doc_text
-            })
-        st.dataframe(chunks_display, use_container_width=True, hide_index=True)
-    except Exception as e:
-        st.caption(f"Unable to read ChromaDB chunks preview directly: {e}")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-#  WORKSPACE 4: ENGINE DIAGNOSTICS & TELEMETRY WORKSPACE
-# ═══════════════════════════════════════════════════════════════════════════════
-
-with tab_diagnostics:
-    st.markdown("""
-    <div style="margin-bottom: 1rem;">
-        <h3 style="font-size:1.1rem; margin-bottom:0.2rem;">Engine Architecture & System Diagnostics</h3>
-        <p style="color:var(--text-secondary); font-size:0.84rem; margin:0;">
-            Verify LM Studio model endpoints, LangGraph state machine routing, and hardware VRAM allocations.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    d1, d2 = st.columns(2, gap="medium")
-
-    with d1:
-        st.markdown("""
-        <div class="tech-card">
-            <div class="tech-card-header">LangGraph Dual-Path Routing State Machine</div>
-            <div style="font-family:var(--font-mono); font-size:0.75rem; background:var(--bg-base); padding:1rem; border-radius:4px; border:1px solid var(--border-subtle); line-height:1.7;">
-                [User Question]<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;│<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;▼<br>
-                <strong>classify_query (Gemma 4 Router)</strong><br>
-                &nbsp;&nbsp;&nbsp;&nbsp;├─────── "vector" ───────► <strong>retrieve_vector (ChromaDB)</strong><br>
-                &nbsp;&nbsp;&nbsp;&nbsp;└─────── "graph"  ───────► <strong>retrieve_graph (graph.json)</strong><br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>generate_answer (Gemma 4 Synthesiser)</strong><br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Streaming Academic Answer]
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with d2:
-        lm_info = health.get("lm_studio", {}) if health else {}
-        st.markdown(f"""
-        <div class="tech-card">
-            <div class="tech-card-header">Model Inventory & Hardware Settings</div>
-            <div style="font-family:var(--font-mono); font-size:0.75rem; line-height:1.8;">
-                <div>Server Endpoint: <span style="color:var(--text-primary);">http://localhost:1234/v1</span></div>
-                <div>Router Model: <span style="color:var(--accent-vector);">google/gemma-4-e4b</span> ({'Ready' if lm_info.get('router_ready') else 'Offline'})</div>
-                <div>Synthesiser Model: <span style="color:var(--accent-vector);">google/gemma-4-e4b</span> ({'Ready' if lm_info.get('llm_ready') else 'Offline'})</div>
-                <div>Embedding Model: <span style="color:var(--accent-vector);">text-embedding-nomic-embed-text-v1.5</span> ({'Ready' if lm_info.get('embed_ready') else 'Offline'})</div>
-                <hr style="border:none; border-top:1px solid var(--border-subtle); margin:0.6rem 0;">
-                <div>Target GPU: <span style="color:var(--text-primary);">AMD Radeon RX 6500M (4GB VRAM)</span></div>
-                <div>Context Window: <span style="color:var(--text-primary);">4096 tokens</span></div>
-                <div>Router Max Tokens: <span style="color:var(--text-primary);">128</span></div>
-                <div>Synthesis Max Tokens: <span style="color:var(--text-primary);">2048</span></div>
-                <div>Temperature: <span style="color:var(--text-primary);">0.2</span></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Live Router Classifier Sandbox
-    st.markdown("<h4 style='font-size:0.95rem; margin-top:1rem;'>Live Query Router Test Sandbox</h4>", unsafe_allow_html=True)
-    st.caption("Test how the Gemma 4 router agent classifies queries into Vector vs Graph without executing the full synthesis.")
-    
-    with st.form("router_sandbox_form"):
-        test_q = st.text_input("Test Query", value="How does vector retrieval compare to graph traversal?")
-        run_test = st.form_submit_button("Test Router Decision", type="primary")
-        
-        if run_test:
-            try:
-                from core.config import client, ROUTER_MODEL, ROUTER_SYSTEM_PROMPT, ROUTER_MAX_TOKENS, TEMPERATURE
-                t0 = time.time()
-                res = client.chat.completions.create(
-                    model=ROUTER_MODEL,
-                    messages=[
-                        {"role": "system", "content": ROUTER_SYSTEM_PROMPT},
-                        {"role": "user", "content": test_q},
-                    ],
-                    max_tokens=ROUTER_MAX_TOKENS,
-                    temperature=TEMPERATURE,
-                )
-                raw = res.choices[0].message.content.strip()
-                import re
-                matches = re.findall(r'\b(vector|graph)\b', raw, re.IGNORECASE)
-                chosen = matches[-1].lower() if matches else "vector"
-                t_elapsed = round(time.time() - t0, 3)
-                
-                badge_color = "var(--accent-vector)" if chosen == "vector" else "var(--accent-graph)"
-                st.markdown(f"""
-                <div style="background:var(--bg-surface); padding:1rem; border-radius:4px; border:1px solid {badge_color}; margin-top:0.75rem;">
-                    <div>Classification: <strong style="color:{badge_color}; font-size:1rem; text-transform:uppercase;">{chosen}</strong> ({t_elapsed}s)</div>
-                    <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">Raw output: {raw}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"Sandbox classification failed: {e}")

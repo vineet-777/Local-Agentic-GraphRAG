@@ -8,7 +8,7 @@
 
 ## 1. Project Overview
 
-Local GraphRAG is a fully local, multi-agent Retrieval-Augmented Generation (RAG) system that combines traditional vector similarity search with a knowledge graph for dual-path retrieval. Users upload PDF or DOCX documents through a Streamlit web interface; the system extracts text, chunks it, embeds the chunks into ChromaDB, and simultaneously constructs a JSON-based knowledge graph by extracting entity-relationship triples using an LLM. When a user asks a question, a LangGraph-orchestrated pipeline classifies the query, routes it to the appropriate retrieval backend (vector DB or knowledge graph), retrieves relevant context, and generates a grounded answer â€” all using locally-hosted models via LM Studio's OpenAI-compatible API.
+Local GraphRAG is a fully local, multi-agent Retrieval-Augmented Generation (RAG) system that combines traditional vector similarity search with a knowledge graph for dual-path retrieval. Authenticated API clients can submit PDF or DOCX documents; the system extracts text, chunks it, embeds the chunks into ChromaDB, and simultaneously constructs a JSON-based knowledge graph by extracting entity-relationship triples using an LLM. The Streamlit interface provides Query Studio and Knowledge Graph Explorer workspaces for querying and exploring indexed data. When a user asks a question, a LangGraph-orchestrated pipeline classifies the query, routes it to the appropriate retrieval backend (vector DB or knowledge graph), retrieves relevant context, and generates a grounded answer â€” all using locally-hosted models via LM Studio's OpenAI-compatible API.
 
 ### Core Problem
 
@@ -18,10 +18,10 @@ Standard RAG systems retrieve context only through vector similarity, which work
 
 - **Dual retrieval:** Vector DB for factual queries, Knowledge Graph for relational queries
 - **LLM-powered routing:** A dedicated router agent classifies each query before retrieval
-- **Reasoning trace:** Every step (classify â†’ retrieve â†’ generate) is logged with latency and metadata, displayed in the UI sidebar
+- **Reasoning trace:** Every step (classify â†’ retrieve â†’ generate) is logged with latency and metadata, displayed with the corresponding query response
 - **Multi-agent orchestration:** LangGraph state machine coordinates four distinct processing nodes
 - **100% local:** All inference runs on LM Studio â€” no cloud APIs, no data leaves the machine
-- **Dynamic ingestion:** Upload files at any time; data is additive and deduplicated
+- **Dynamic ingestion:** Authenticated API clients can upload files at any time; data is additive and deduplicated
 
 ---
 
@@ -32,9 +32,8 @@ Standard RAG systems retrieve context only through vector similarity, which work
 ```
 â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
 â”‚  FRONTEND (Streamlit)         ui/app.py                 â”‚
-â”‚  - File upload widget         - Chat interface          â”‚
-â”‚  - System health display      - Reasoning trace sidebar â”‚
-â”‚  - Processing progress bar                              â”‚
+â”‚  - Query Studio               - Knowledge Graph Explorerâ”‚
+â”‚  - System health display      - Reasoning trace         â”‚
 â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
 â”‚  BACKEND (FastAPI)            api/server.py              â”‚
 â”‚  - REST API endpoints         - Background task runner   â”‚
@@ -61,7 +60,7 @@ Standard RAG systems retrieve context only through vector similarity, which work
 ### 2.2 Ingestion Workflow
 
 ```
-User uploads PDF/DOCX via Streamlit sidebar
+An authenticated API client uploads PDF/DOCX
     â”‚
     â–¼
 POST /api/upload  (FastAPI validates file type + size)
@@ -81,7 +80,7 @@ Background task: _process_uploaded_files()
             â”œâ”€â”€ merge_triples_into_graph()  â†’ Deduplicate nodes/edges
             â””â”€â”€ save_graph()               â†’ db/graph.json
 
-Processing status polled via GET /api/upload-status (2s interval from UI)
+Processing status is available through GET /api/upload-status for API clients
 ```
 
 **Stages in detail:**
@@ -377,22 +376,21 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 ### 3.7 `ui/app.py` â€” Streamlit Frontend
 
-**Purpose:** Full-featured web UI with file upload, chat interface, system health display, processing progress, and reasoning trace sidebar.
+**Purpose:** Streamlit interface for Query Studio and Knowledge Graph Explorer, with authentication, system health display, and query reasoning traces. Document upload and processing controls are not exposed in the UI.
 
 #### Key Sections
 
-1. **Custom CSS** (lines 29â€“229): Google Fonts (Inter), gradient header, status badges, route badges, trace cards, processing cards, upload area styling
-2. **Session State**: `messages`, `traces`, `system_healthy`, `health_data`, `upload_triggered`
-3. **Sidebar**: File upload widget â†’ Process Files button â†’ processing status polling â†’ system health display â†’ reasoning trace viewer â†’ clear chat button
-4. **Main Area**: Gradient header â†’ system status banners (no API / no LM Studio / no models / no data) â†’ chat interface with 300s timeout
+1. **Custom CSS**: Shared styling for navigation, status badges, query traces, graph, chat, and sidebar
+2. **Session State**: `messages`, `traces`, authentication state, `prompt_seed`, and `graph_cache`
+3. **Sidebar**: Signed-in user, session telemetry, and conversation reset
+4. **Main Area**: Global system status, Query Studio, and Knowledge Graph Explorer
 
 #### API Helper Functions
 
 | Function | Purpose |
 |---|---|
-| `check_health()` | GET `/api/health` â€” updates session state |
-| `get_processing_status()` | GET `/api/upload-status` â€” polls processing progress |
-| `upload_files_to_api(files)` | POST `/api/upload` â€” sends multipart files |
+| `check_health()` | GET `/api/health` â€” supplies global system status |
+| `load_graph_data()` | Loads and caches the persisted knowledge graph for the explorer |
 
 
 ---
@@ -465,7 +463,7 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 ### 4.3 `GET /api/upload-status`
 
-**Purpose:** Poll background file processing progress. The Streamlit UI calls this every 2 seconds during processing.
+**Purpose:** Poll background file processing progress for API clients.
 
 **Response (200):**
 ```json
