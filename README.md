@@ -49,9 +49,11 @@ streamlit run ui/app.py
 
 Then:
 1. Open `http://localhost:8501` in your browser
-2. Upload PDF/DOCX files via the sidebar
-3. Wait for processing (progress bar shown)
-4. Start chatting!
+2. Create an account or sign in on the welcome screen
+3. Ask questions about indexed data in Query Studio
+4. Explore the persisted knowledge graph in Knowledge Graph Explorer
+
+The Streamlit UI does not include document upload or ingestion monitoring. The authenticated upload and status API endpoints remain available to API clients.
 
 ## Project Structure
 
@@ -79,17 +81,31 @@ Then:
 
 | Endpoint | Method | Description |
 |---|---|---|
+| `/api/conversations` | GET | List the signed-in user's conversations (bearer token required) |
+| `/api/conversations/{id}` | GET | Load an owned conversation with message traces (bearer token required) |
+| `/api/conversations/{id}` | PATCH | Rename an owned conversation (bearer token required) |
+| `/api/conversations/{id}` | DELETE | Delete an owned conversation (bearer token required) |
+| `/api/auth/signup` | POST | Create an account and return a session token |
+| `/api/auth/signin` | POST | Authenticate and return a session token |
+| `/api/auth/me` | GET | Return the signed-in user (Bearer token required) |
+| `/api/auth/logout` | POST | Revoke the current session |
 | `/api/health` | GET | LM Studio + DB status |
-| `/api/upload` | POST | Upload PDF/DOCX files for processing |
-| `/api/upload-status` | GET | Poll background processing progress |
-| `/api/query` | POST | Ask a question, get answer + reasoning trace |
+| `/api/upload` | POST | Upload PDF/DOCX files for processing (Bearer token required) |
+| `/api/upload-status` | GET | Poll processing progress (Bearer token required) |
+| `/api/query` | POST | Ask a question (Bearer token required) |
+
+Signup and sign-in return an opaque bearer token that expires after seven days. Send it as `Authorization: Bearer <token>` to protected endpoints. Passwords are stored as Argon2 hashes and account/session data is persisted locally in `db/auth.sqlite3`.
 
 ## Features
 
-- **Dynamic Ingestion**: Upload files anytime — data is additive, never overwritten
+- **API-Based Ingestion**: Authenticated upload endpoints add data without overwriting existing records
+- **Persistent Chat History**: Per-user conversations with searchable sidebar history, rename, delete, and restored provenance traces
 - **Dual Retrieval**: Automatic routing between vector search and knowledge graph
 - **Reasoning Trace**: See exactly which path the AI took and what sources it used
-- **Progress Tracking**: Real-time progress bar during file processing
+- **Processing Status API**: Poll background file-processing progress
 - **Cold Start Protection**: Clear error messages for missing services or data
 - **Persistent Storage**: All data survives app restarts (stored in `/db/`)
+- **Local Authentication**: SQLite accounts, Argon2 password hashing, expiring and revocable sessions
 - **100% Local**: All inference via LM Studio — no cloud, no API keys, no data leaves your machine
+
+> Accounts authenticate access to the local GraphRAG API. The knowledge base is shared by accounts on this local installation; it is not partitioned per user.

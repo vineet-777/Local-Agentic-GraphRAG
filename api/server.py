@@ -3,14 +3,21 @@ Local GraphRAG — FastAPI Backend
 Serves the LangGraph engine + dynamic file upload/ingestion. Fully local.
 """
 
-import sys
+import asyncio
+import json
+import queue
 import shutil
+import sys
+import threading
 from pathlib import Path
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 # Ensure project root is on sys.path so `core.*` imports work
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -29,6 +36,26 @@ from core.config import (
 from core.engine import run_query
 from core.ingest import extract_text, chunk_documents, embed_chunks, ingest_files
 from core.graph_builder import build_graph_from_chunks
+from api.auth import (
+    UserAlreadyExistsError,
+    authenticate_user,
+    create_session,
+    create_user,
+    get_current_user,
+    initialize_auth_store,
+    revoke_session,
+)
+from api.chats import (
+    append_message,
+    create_conversation,
+    delete_conversation,
+    get_conversation_with_messages,
+    initialize_chat_store,
+    list_conversations,
+    rename_conversation,
+)
+
+_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 # ─── Background Processing ───────────────────────────────────────────────────
@@ -113,6 +140,8 @@ def _process_uploaded_files(file_paths: list[Path]):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
+    initialize_auth_store()
+    initialize_chat_store()
     lm_status = is_lm_studio_running()
     db_status = is_db_ready()
     print("=" * 60)
@@ -151,11 +180,112 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000, description="The user's question")
+    conversation_id: str | None = None
+
+
+class RenameConversationRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=80)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def strip_title(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+class SignupRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=80)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+
+class SigninRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=1, max_length=128)
+
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    name: str
+    created_at: str
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: UserResponse
 
 class QueryResponse(BaseModel):
     response: str
     route: str
     reasoning_trace: list[dict]
+
+
+def _sse_event(name: str, data: dict | str) -> str:
+    return f"event: {name}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+async def _stream_query_response(
+    query: str,
+    request: Request,
+    user_id: int,
+    conversation_id: str,
+    title: str,
+) -> AsyncIterator[str]:
+    events: queue.Queue[tuple[str, str | dict]] = queue.Queue()
+    cancelled = threading.Event()
+
+    def send_chunk(text: str) -> bool:
+        if cancelled.is_set():
+            return True
+        events.put(("token", text))
+        return cancelled.is_set()
+
+    def execute_query() -> None:
+        try:
+            result = run_query(
+                query,
+                on_chunk=send_chunk,
+                cancel_event=cancelled,
+            )
+        except Exception as exc:
+            events.put(("error", f"Engine error: {exc}"))
+        else:
+            events.put(("result", result))
+
+    worker = threading.Thread(target=execute_query, daemon=True)
+    worker.start()
+    try:
+        while True:
+            if await request.is_disconnected():
+                break
+            try:
+                name, data = await asyncio.to_thread(events.get, True, 0.1)
+            except queue.Empty:
+                continue
+            if name == "token":
+                yield _sse_event(name, {"text": data})
+            elif name == "result":
+                if await request.is_disconnected() or cancelled.is_set():
+                    break
+                if not isinstance(data, dict):
+                    yield _sse_event("error", "Engine returned an invalid result.")
+                    break
+                result = data
+                answer = result.get("response", "")
+                trace = result.get("reasoning_trace", [])
+                append_message(user_id, conversation_id, "assistant", answer, trace)
+                yield _sse_event("complete", {
+                    "route": result.get("route", "unknown"),
+                    "reasoning_trace": trace,
+                    "conversation_id": conversation_id,
+                    "title": title,
+                })
+                break
+            else:
+                yield _sse_event(name, data)
+                break
+    finally:
+        cancelled.set()
+        await asyncio.to_thread(worker.join, 1)
+
 
 class HealthResponse(BaseModel):
     status: str
@@ -180,6 +310,84 @@ class ProcessingStatusResponse(BaseModel):
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
+@app.get("/api/conversations", tags=["Conversations"])
+async def get_conversations(user: dict = Depends(get_current_user)):
+    """List the signed-in user's conversations."""
+    return list_conversations(user["id"])
+
+
+@app.get("/api/conversations/{conversation_id}", tags=["Conversations"])
+async def get_conversation(conversation_id: str, user: dict = Depends(get_current_user)):
+    """Load a conversation and its messages when owned by the signed-in user."""
+    conversation = get_conversation_with_messages(user["id"], conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return conversation
+
+
+@app.patch("/api/conversations/{conversation_id}", tags=["Conversations"])
+async def patch_conversation(
+    conversation_id: str,
+    request: RenameConversationRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Rename one of the signed-in user's conversations."""
+    if not request.title:
+        raise HTTPException(status_code=422, detail="Title must not be blank.")
+    conversation = rename_conversation(user["id"], conversation_id, request.title)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+    return conversation
+
+
+@app.delete("/api/conversations/{conversation_id}", status_code=204, tags=["Conversations"])
+async def remove_conversation(
+    conversation_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Delete one of the signed-in user's conversations."""
+    if not delete_conversation(user["id"], conversation_id):
+        raise HTTPException(status_code=404, detail="Conversation not found.")
+
+
+@app.post("/api/auth/signup", response_model=AuthResponse, status_code=201, tags=["Authentication"])
+async def signup(request: SignupRequest):
+    """Create a local account and immediately start an authenticated session."""
+    try:
+        user = create_user(request.email, request.name, request.password)
+    except UserAlreadyExistsError:
+        raise HTTPException(status_code=409, detail="An account with this email already exists.")
+
+    token, expires_in = create_session(user["id"])
+    return AuthResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+@app.post("/api/auth/signin", response_model=AuthResponse, tags=["Authentication"])
+async def signin(request: SigninRequest):
+    """Verify credentials and issue a new bearer session."""
+    user = authenticate_user(request.email, request.password)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    token, expires_in = create_session(user["id"])
+    return AuthResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+@app.get("/api/auth/me", response_model=UserResponse, tags=["Authentication"])
+async def get_signed_in_user(user: dict = Depends(get_current_user)):
+    """Return the account associated with the supplied bearer session."""
+    return user
+
+
+@app.post("/api/auth/logout", status_code=204, tags=["Authentication"])
+async def logout(
+    _user: dict = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+):
+    """Revoke the current bearer session."""
+    if credentials is not None:
+        revoke_session(credentials.credentials)
+
 @app.get("/api/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
     """System health: LM Studio connectivity + database readiness."""
@@ -199,6 +407,7 @@ async def health_check():
 async def upload_files(
     background_tasks: BackgroundTasks,
     files: list[UploadFile] = File(...),
+    _user: dict = Depends(get_current_user),
 ):
     """
     Upload PDF/DOCX files for ingestion.
@@ -266,7 +475,7 @@ async def upload_files(
 
 
 @app.get("/api/upload-status", response_model=ProcessingStatusResponse, tags=["Ingestion"])
-async def get_upload_status():
+async def get_upload_status(_user: dict = Depends(get_current_user)):
     """Poll this endpoint to track background file processing progress."""
     status = processing_status.get()
     return ProcessingStatusResponse(
@@ -281,8 +490,17 @@ async def get_upload_status():
     )
 
 
-@app.post("/api/query", response_model=QueryResponse, tags=["Query"])
-async def query_engine(request: QueryRequest):
+@app.post(
+    "/api/query",
+    response_model=QueryResponse,
+    responses={200: {"content": {"text/event-stream": {"schema": {"type": "string"}}}}},
+    tags=["Query"],
+)
+async def query_engine(
+    request: QueryRequest,
+    http_request: Request,
+    user: dict = Depends(get_current_user),
+):
     """
     Main query endpoint. Runs the LangGraph pipeline and returns
     the answer + full reasoning trace for sidebar display.
@@ -303,12 +521,46 @@ async def query_engine(request: QueryRequest):
             detail="No documents ingested yet. Please upload PDF/DOCX files first.",
         )
 
+    if request.conversation_id is None:
+        title_text = " ".join(request.query.split())
+        title = title_text[:40].rstrip()
+        if len(title_text) > 40:
+            title = f"{title}…"
+        conversation = create_conversation(user["id"], title)
+        conversation_id = conversation["id"]
+    else:
+        conversation_id = request.conversation_id
+        conversation = get_conversation_with_messages(user["id"], conversation_id)
+        if conversation is None:
+            raise HTTPException(status_code=404, detail="Conversation not found.")
+        title = conversation["title"]
+
+    append_message(user["id"], conversation_id, "user", request.query)
+    # TODO: pass history to run_query
+
+    if "text/event-stream" in http_request.headers.get("accept", "").lower():
+        return StreamingResponse(
+            _stream_query_response(
+                request.query, http_request, user["id"], conversation_id, title
+            ),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
     try:
         result = run_query(request.query)
+        trace = result.get("reasoning_trace", [])
+        append_message(
+            user["id"], conversation_id, "assistant",
+            result.get("response", "No response generated."), trace,
+        )
         return QueryResponse(
             response=result.get("response", "No response generated."),
             route=result.get("route", "unknown"),
-            reasoning_trace=result.get("reasoning_trace", []),
+            reasoning_trace=trace,
         )
     except Exception as e:
         raise HTTPException(

@@ -8,7 +8,7 @@
 
 ## 1. Project Overview
 
-Local GraphRAG is a fully local, multi-agent Retrieval-Augmented Generation (RAG) system that combines traditional vector similarity search with a knowledge graph for dual-path retrieval. Users upload PDF or DOCX documents through a Streamlit web interface; the system extracts text, chunks it, embeds the chunks into ChromaDB, and simultaneously constructs a JSON-based knowledge graph by extracting entity-relationship triples using an LLM. When a user asks a question, a LangGraph-orchestrated pipeline classifies the query, routes it to the appropriate retrieval backend (vector DB or knowledge graph), retrieves relevant context, and generates a grounded answer â€” all using locally-hosted models via LM Studio's OpenAI-compatible API.
+Local GraphRAG is a fully local, multi-agent Retrieval-Augmented Generation (RAG) system that combines traditional vector similarity search with a knowledge graph for dual-path retrieval. Authenticated API clients can submit PDF or DOCX documents; the system extracts text, chunks it, embeds the chunks into ChromaDB, and simultaneously constructs a JSON-based knowledge graph by extracting entity-relationship triples using an LLM. The Streamlit interface provides Query Studio and Knowledge Graph Explorer workspaces for querying and exploring indexed data. When a user asks a question, a LangGraph-orchestrated pipeline classifies the query, routes it to the appropriate retrieval backend (vector DB or knowledge graph), retrieves relevant context, and generates a grounded answer â€” all using locally-hosted models via LM Studio's OpenAI-compatible API.
 
 ### Core Problem
 
@@ -18,10 +18,10 @@ Standard RAG systems retrieve context only through vector similarity, which work
 
 - **Dual retrieval:** Vector DB for factual queries, Knowledge Graph for relational queries
 - **LLM-powered routing:** A dedicated router agent classifies each query before retrieval
-- **Reasoning trace:** Every step (classify â†’ retrieve â†’ generate) is logged with latency and metadata, displayed in the UI sidebar
+- **Reasoning trace:** Every step (classify â†’ retrieve â†’ generate) is logged with latency and metadata, displayed with the corresponding query response
 - **Multi-agent orchestration:** LangGraph state machine coordinates four distinct processing nodes
 - **100% local:** All inference runs on LM Studio â€” no cloud APIs, no data leaves the machine
-- **Dynamic ingestion:** Upload files at any time; data is additive and deduplicated
+- **Dynamic ingestion:** Authenticated API clients can upload files at any time; data is additive and deduplicated
 
 ---
 
@@ -32,9 +32,8 @@ Standard RAG systems retrieve context only through vector similarity, which work
 ```
 â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
 â”‚  FRONTEND (Streamlit)         ui/app.py                 â”‚
-â”‚  - File upload widget         - Chat interface          â”‚
-â”‚  - System health display      - Reasoning trace sidebar â”‚
-â”‚  - Processing progress bar                              â”‚
+â”‚  - Query Studio               - Knowledge Graph Explorerâ”‚
+â”‚  - System health display      - Reasoning trace         â”‚
 â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
 â”‚  BACKEND (FastAPI)            api/server.py              â”‚
 â”‚  - REST API endpoints         - Background task runner   â”‚
@@ -61,7 +60,7 @@ Standard RAG systems retrieve context only through vector similarity, which work
 ### 2.2 Ingestion Workflow
 
 ```
-User uploads PDF/DOCX via Streamlit sidebar
+An authenticated API client uploads PDF/DOCX
     â”‚
     â–¼
 POST /api/upload  (FastAPI validates file type + size)
@@ -81,7 +80,7 @@ Background task: _process_uploaded_files()
             â”œâ”€â”€ merge_triples_into_graph()  â†’ Deduplicate nodes/edges
             â””â”€â”€ save_graph()               â†’ db/graph.json
 
-Processing status polled via GET /api/upload-status (2s interval from UI)
+Processing status is available through GET /api/upload-status for API clients
 ```
 
 **Stages in detail:**
@@ -132,7 +131,8 @@ Node 3: generate_answer
     â””â”€â”€ Output: response=answer string
 
     â–¼
-QueryResponse returned to Streamlit with response + route + reasoning_trace
+Answer chunks stream from LM Studio through the existing endpoint to Streamlit
+Final route + reasoning_trace metadata is sent when generation completes
 ```
 
 ### 2.4 Gemma 4 Integration in the Pipeline
@@ -359,7 +359,8 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 | Schema | Fields | Purpose |
 |---|---|---|
-| `QueryRequest` | `query: str` (1â€“2000 chars) | Query input |
+| `QueryRequest` | `query: str` (1â€“2000 chars), `conversation_id: str | None` | Query input and optional conversation |
+| `RenameConversationRequest` | `title: str` (1â€“80 chars, trimmed) | Conversation rename |
 | `QueryResponse` | `response: str`, `route: str`, `reasoning_trace: list[dict]` | Query result |
 | `HealthResponse` | `status: str`, `lm_studio: dict`, `database: dict` | Health status |
 | `UploadResponse` | `message: str`, `files_accepted: list[str]`, `files_rejected: list[dict]` | Upload result |
@@ -376,22 +377,23 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 ### 3.7 `ui/app.py` â€” Streamlit Frontend
 
-**Purpose:** Full-featured web UI with file upload, chat interface, system health display, processing progress, and reasoning trace sidebar.
+**Purpose:** Streamlit interface for Query Studio and Knowledge Graph Explorer, with authentication, system health display, and query reasoning traces. Document upload and processing controls are not exposed in the UI.
 
 #### Key Sections
 
-1. **Custom CSS** (lines 29â€“229): Google Fonts (Inter), gradient header, status badges, route badges, trace cards, processing cards, upload area styling
-2. **Session State**: `messages`, `traces`, `system_healthy`, `health_data`, `upload_triggered`
-3. **Sidebar**: File upload widget â†’ Process Files button â†’ processing status polling â†’ system health display â†’ reasoning trace viewer â†’ clear chat button
-4. **Main Area**: Gradient header â†’ system status banners (no API / no LM Studio / no models / no data) â†’ chat interface with 300s timeout
+1. **Custom CSS**: Shared styling for navigation, status badges, query traces, graph, chat, and sidebar
+2. **Session State**: `messages`, `traces`, `active_conversation_id`, cached `conversations`, authentication state, `prompt_seed`, and `graph_cache`
+3. **Sidebar**: New chat, searchable recency-grouped conversation history, rename/delete actions, signed-in user, and collapsed system status
+4. **Main Area**: Global system status, Query Studio, and Knowledge Graph Explorer
 
 #### API Helper Functions
 
 | Function | Purpose |
 |---|---|
-| `check_health()` | GET `/api/health` â€” updates session state |
-| `get_processing_status()` | GET `/api/upload-status` â€” polls processing progress |
-| `upload_files_to_api(files)` | POST `/api/upload` â€” sends multipart files |
+| `check_health()` | GET `/api/health` â€” supplies global system status |
+| `refresh_conversations()` | GET `/api/conversations` â€” refreshes the per-session sidebar cache |
+| `load_conversation(conversation_id)` | GET `/api/conversations/{id}` â€” loads messages and assistant reasoning traces |
+| `load_graph_data()` | Loads and caches the persisted knowledge graph for the explorer |
 
 
 ---
@@ -464,7 +466,7 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 ### 4.3 `GET /api/upload-status`
 
-**Purpose:** Poll background file processing progress. The Streamlit UI calls this every 2 seconds during processing.
+**Purpose:** Poll background file processing progress for API clients.
 
 **Response (200):**
 ```json
@@ -493,10 +495,12 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 **Request:**
 ```json
 {
-  "query": "What is local graph rag?"
+  "query": "What is local graph rag?",
+  "conversation_id": null
 }
 ```
 - `query`: string, 1â€“2000 characters
+- `conversation_id`: optional conversation id; omit or pass `null` to create a conversation on the first message
 
 **Response (200):**
 ```json
@@ -534,6 +538,21 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 }
 ```
 
+**Streaming response:** Send `Accept: text/event-stream` to receive server-sent events
+from the same endpoint. `token` events contain an incremental text chunk:
+
+```text
+event: token
+data: {"text":"Local GraphRAG"}
+```
+
+The final `complete` event contains the selected route, full reasoning trace,
+`conversation_id`, and conversation `title`. The user message is stored before
+generation; the assistant response and trace are stored only after successful
+completion. Conversation history is not passed back to the engine.
+An `error` event reports generation failures. Requests that do not ask for
+`text/event-stream` continue to receive the JSON response documented above.
+
 **Error codes:**
 
 | Code | Condition |
@@ -543,7 +562,58 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 ---
 
-### 4.5 `GET /`
+### 4.5 `GET /api/conversations`
+
+**Purpose:** List the signed-in user's conversations, newest activity first.
+
+**Authentication:** Bearer token required.
+
+**Response (200):**
+```json
+[
+  {"id": "uuid4hex", "title": "What is GraphRAG?", "updated_at": 1792622400}
+]
+```
+
+### 4.6 `GET /api/conversations/{id}`
+
+**Purpose:** Load an owned conversation, including messages and assistant
+reasoning traces. A conversation owned by another user is indistinguishable
+from a missing conversation and returns 404.
+
+**Response (200):**
+```json
+{
+  "id": "uuid4hex",
+  "title": "What is GraphRAG?",
+  "messages": [
+    {"role": "user", "content": "What is GraphRAG?", "reasoning_trace": []},
+    {"role": "assistant", "content": "GraphRAG combines...", "reasoning_trace": []}
+  ]
+}
+```
+
+### 4.7 `PATCH /api/conversations/{id}`
+
+**Purpose:** Rename an owned conversation. The trimmed title must contain
+1–80 characters.
+
+**Request:** `{"title": "A concise title"}`
+
+**Response (200):** `{"id": "uuid4hex", "title": "A concise title", "updated_at": 1792622400}`
+
+**Errors:** 404 if the conversation does not exist or belongs to another user;
+422 if the title is blank or exceeds 80 characters.
+
+### 4.8 `DELETE /api/conversations/{id}`
+
+**Purpose:** Delete an owned conversation and its messages.
+
+**Response:** 204 No Content.
+
+**Errors:** 404 if the conversation does not exist or belongs to another user.
+
+### 4.9 `GET /`
 
 **Purpose:** Root info endpoint. Returns API version and available endpoint paths.
 
@@ -555,7 +625,8 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
     "health": "GET /api/health",
     "upload": "POST /api/upload",
     "upload_status": "GET /api/upload-status",
-    "query": "POST /api/query"
+    "query": "POST /api/query",
+    "conversations": "GET /api/conversations"
   }
 }
 ```
@@ -650,7 +721,18 @@ START â†’ classify_query â”€â”¬â”€â†’ retrieve_vector â
 
 ---
 
-### 5.4 QueryState (LangGraph)
+### 5.4 Conversation History (SQLite)
+
+Conversation data is stored in `db/auth.sqlite3` beside accounts and sessions.
+Both tables use foreign keys with cascading deletion; chat API operations always
+scope reads and writes to the authenticated user.
+
+| Table | Fields | Purpose |
+|---|---|---|
+| `conversations` | `id` (UUID4 hex PK), `user_id` (FK to users), `title`, `created_at`, `updated_at` (Unix seconds) | Per-user conversation metadata; indexed by `(user_id, updated_at DESC)` |
+| `messages` | `id` (autoincrement PK), `conversation_id` (FK), `role` (`user` or `assistant`), `content`, `trace_json`, `created_at` (Unix seconds) | Ordered turns and assistant provenance traces |
+
+### 5.5 QueryState (LangGraph)
 
 | Field | Type | Set By | Purpose |
 |---|---|---|---|
@@ -968,7 +1050,7 @@ All configurable values are defined in `core/config.py`. This is the single sour
 | 3 | **No streaming responses** â€” UI waits for full answer before displaying | The API returns the complete response; no SSE/WebSocket streaming implemented | Implement streaming via FastAPI's `StreamingResponse` and Streamlit's `st.write_stream` |
 | 4 | **Sequential file processing** â€” Multiple files are ingested one at a time | Graph building requires sequential LLM calls per chunk | Could parallelize embedding (Stage 2) while keeping graph building sequential |
 | 5 | **Keyword-based graph retrieval** â€” Graph search uses simple string matching | No embedding-based similarity on graph nodes | Add embedding similarity for node matching, or use a proper graph database (Neo4j) |
-| 6 | **No authentication** â€” API is open to all origins with CORS `*` | Designed for local-only use | Add API key middleware or OAuth if deploying on a network |
+| 6 | **No role-based authorization** â€” authenticated users share the local GraphRAG corpus | Single-user/local deployment model | Add roles and per-user data isolation before multi-user network deployment |
 | 7 | **No document deletion** â€” Once ingested, data cannot be removed | No delete endpoint or UI; ChromaDB and graph.json are append-only | Implement a `/api/delete` endpoint that removes chunks by source filename and prunes graph nodes |
 | 8 | **Fixed chunk size** â€” Same chunking parameters for all file types | PDF pages and DOCX sections have different optimal chunk sizes | Add per-file-type chunking configuration |
 | 9 | **No conversation memory** â€” Each query is independent | LangGraph state is not persisted between queries | Add a conversation history buffer to the `QueryState` and system prompt |
@@ -1043,4 +1125,3 @@ All documentation was generated by reading the actual source code of every file 
 | `README.md` | 96 | Project README |
 
 **Nothing was assumed or fabricated.** Every function name, parameter, return type, constant value, prompt template, and architectural detail documented above was verified against the actual codebase as of the documentation generation date.
-
