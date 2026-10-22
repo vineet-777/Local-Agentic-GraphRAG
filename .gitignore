@@ -59,4 +59,10 @@ logs/
 # OS-generated files
 .DS_Store
 Thumbs.db
-desktop.ini
+/.streamlit/*
+!.streamlit/config.toml
+/db
+/.claude/skills
+*.sqlite3
+
+CLAUDE.md

@@ -1,10 +1,11 @@
 """
-Local GraphRAG — Production UI/UX Overhaul
-Air-Gapped Engineering Studio Architecture:
-- Two-Workspace Shell (Query Studio, Graph Explorer)
-- Interactive Force-Directed Knowledge Graph Explorer (60fps HTML5 Canvas, zero external deps)
-- Real-time Dual-Stream Reasoning Telemetry & Source Provenance Drawer
-- Air-Gapped Authentication & Session Management
+Local GraphRAG — Precision Engineering Studio UI
+Air-Gapped Academic Retrieval & Knowledge Graph Workbench:
+- Dual-Workspace Navigation (Query Studio, Knowledge Graph Explorer, Document Ingestion)
+- Interactive Force-Directed Knowledge Graph Visualizer (HTML5 Canvas)
+- Dual-Retrieval Agent Reasoning Telemetry (ChromaDB + NetworkX Graph)
+- Document Ingestion Pipeline (PDF / DOCX Extraction, Chunking, Embedding, Triple Generation)
+- Air-Gapped Authentication & Multi-Conversation Session Management
 """
 
 import sys
@@ -33,6 +34,9 @@ API_AUTH_SIGNIN = f"{API_BASE}/api/auth/signin"
 API_AUTH_ME = f"{API_BASE}/api/auth/me"
 API_AUTH_LOGOUT = f"{API_BASE}/api/auth/logout"
 API_CONVERSATIONS = f"{API_BASE}/api/conversations"
+API_UPLOAD = f"{API_BASE}/api/upload"
+API_UPLOAD_STATUS = f"{API_BASE}/api/upload-status"
+API_SUGGESTED_INQUIRIES = f"{API_BASE}/api/suggested-inquiries"
 
 GRAPH_FILE_PATH = PROJECT_ROOT / "db" / "graph.json"
 
@@ -45,15 +49,14 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─── Design System: Air-Gapped Engineering Studio ─────────────────────────────
+# ─── Design System & Styling (Complementing .streamlit/config.toml) ───────────
 
-st.markdown("""
+st.html("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-    /* ─── CSS Variables & Design Tokens ───────────────────────────────── */
     :root {
         --bg-base: #0b0e14;
         --bg-surface: #121721;
@@ -64,8 +67,8 @@ st.markdown("""
         --text-secondary: #94a3b8;
         --text-muted: #64748b;
         
-        --border-subtle: rgba(255, 255, 255, 0.07);
-        --border-medium: rgba(255, 255, 255, 0.14);
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-medium: #1e293b;
         --border-focus: #38bdf8;
         
         --accent-vector: #38bdf8;
@@ -77,13 +80,9 @@ st.markdown("""
         --accent-graph-border: rgba(16, 185, 129, 0.25);
         
         --accent-router: #f59e0b;
-        
         --accent-alert: #f43f5e;
-        --accent-alert-bg: rgba(244, 63, 94, 0.08);
-        --accent-alert-border: rgba(244, 63, 94, 0.25);
         
         --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif;
-        --font-body: 'Inter', system-ui, sans-serif;
         --font-mono: 'JetBrains Mono', Consolas, monospace;
         
         --radius-sm: 4px;
@@ -91,94 +90,10 @@ st.markdown("""
         --radius-lg: 10px;
     }
 
-    /* ─── Global Base Overrides ────────────────────────────────────────── */
-    html, body, [class*="css"] {
-        font-family: var(--font-body);
-        color: var(--text-primary);
-        background: var(--bg-base);
-    }
-    
-    .stApp {
-        background-color: var(--bg-base);
-    }
-
-    /* Keep the 1.56 sidebar controls visible without the default toolbar. */
-    header[data-testid="stHeader"] {
-        height: 2.5rem;
-        min-height: 2.5rem;
-        background: transparent;
-        box-shadow: none;
-        overflow: visible;
-        z-index: 1000;
-    }
-    header[data-testid="stHeader"] [data-testid="stAppDeployButton"],
-    header[data-testid="stHeader"] [data-testid="stMainMenu"] {
-        display: none !important;
-    }
-    [data-testid="stSidebarHeader"] {
-        display: flex !important;
-        height: 2.5rem;
-        min-height: 2.5rem;
-        padding: 0;
-        overflow: visible;
-        border: 0;
-        position: relative;
-    }
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarExpandButton"] {
-        position: absolute !important;
-        top: 0.25rem;
-        right: 0.25rem;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 1001;
-    }
-    [data-testid="stSidebarCollapseButton"] button,
-    [data-testid="stSidebarExpandButton"] button,
-    button[data-testid="stExpandSidebarButton"],
-    [data-testid="collapsedControl"] button,
-    [data-testid="stSidebarCollapsedControl"] button {
-        visibility: visible !important;
-        opacity: 1 !important;
-        color: var(--text-secondary) !important;
-        background: var(--bg-surface) !important;
-        border: 1px solid var(--border-subtle) !important;
-        border-radius: var(--radius-sm) !important;
-        z-index: 1001;
-    }
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapsedControl"] {
-        position: fixed !important;
-        top: 0.3rem;
-        left: 0.3rem;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 1001;
-    }
-    button[data-testid="stExpandSidebarButton"] {
-        position: fixed !important;
-        top: 0.5rem !important;
-        left: 0.5rem !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 1001;
-    }
-
-    /* Streamlit block container width and spacing */
-    .block-container {
-        max-width: 1400px;
-        padding-top: 1rem !important;
-        padding-bottom: 4rem;
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-
-    /* Headings */
+    /* Headings & font polish */
     h1, h2, h3, h4, h5 {
         font-family: var(--font-heading);
         font-weight: 700;
-        color: var(--text-primary);
         letter-spacing: -0.02em;
     }
     
@@ -205,14 +120,14 @@ st.markdown("""
     }
 
     .brand-mark {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
         background: var(--accent-vector-bg);
         border: 1px solid var(--accent-vector-border);
         border-radius: var(--radius-sm);
         display: grid;
         place-items: center;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         color: var(--accent-vector);
         font-weight: 800;
     }
@@ -243,8 +158,8 @@ st.markdown("""
     .telemetry-pill {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        padding: 0.25rem 0.6rem;
+        gap: 0.45rem;
+        padding: 0.3rem 0.65rem;
         background: var(--bg-elevated);
         border: 1px solid var(--border-subtle);
         border-radius: var(--radius-sm);
@@ -254,332 +169,83 @@ st.markdown("""
     }
 
     .telemetry-dot {
-        width: 6px;
-        height: 6px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
         background: var(--text-muted);
     }
-    .telemetry-dot.online { background: var(--accent-graph); box-shadow: 0 0 6px rgba(16, 185, 129, 0.4); }
-    .telemetry-dot.warning { background: var(--accent-router); }
-    .telemetry-dot.offline { background: var(--accent-alert); }
-
-    /* ─── Navigation Tabs Overrides ────────────────────────────────────── */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 0.5rem;
-        background: transparent;
-        border-bottom: 1px solid var(--border-medium);
-        padding-bottom: 0.25rem;
-        margin-bottom: 1.5rem;
+    .telemetry-dot.online { 
+        background: var(--accent-graph); 
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.6); 
+    }
+    .telemetry-dot.warning { 
+        background: var(--accent-router); 
+    }
+    .telemetry-dot.offline { 
+        background: var(--accent-alert); 
+        box-shadow: 0 0 6px rgba(244, 63, 94, 0.4); 
     }
 
-    .stTabs [data-baseweb="tab"] {
-        height: 2.6rem;
-        padding: 0 1.2rem;
-        background: transparent;
-        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-        font-family: var(--font-heading);
-        font-weight: 600;
-        font-size: 0.86rem;
-        color: var(--text-secondary);
-        border: none;
-        transition: all 0.15s ease;
-    }
-
-    .stTabs [data-baseweb="tab"]:hover {
-        color: var(--text-primary);
-        background: rgba(255, 255, 255, 0.02);
-    }
-
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: var(--text-primary) !important;
-        background: var(--bg-surface) !important;
-        border-bottom: 2px solid var(--accent-vector) !important;
-    }
-
-    .stTabs [data-baseweb="tab-highlight"] {
-        background-color: var(--accent-vector) !important;
-    }
-
-    /* ─── Sidebar Styling ──────────────────────────────────────────────── */
-    section[data-testid="stSidebar"] {
-        background: var(--bg-surface);
-        border-right: 1px solid var(--border-medium);
-    }
-
-    section[data-testid="stSidebar"] .block-container {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-        height: 100%;
-        min-height: calc(100vh - 1rem);
-        padding: 0.75rem 0.65rem 0.6rem;
-        gap: 0.15rem;
-    }
-    section[data-testid="stSidebar"],
-    section[data-testid="stSidebar"] [data-testid="stSidebarContent"],
-    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-        overflow: visible !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        min-height: 0;
-    }
-    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        padding-bottom: 0 !important;
-    }
-    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div {
-        display: flex;
-        flex: 1 1 100%;
-        flex-direction: column;
-        height: 100% !important;
-        min-height: 0;
-    }
-    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"] {
-        display: flex;
-        flex: 1 1 100% !important;
-        flex-direction: column;
-        min-height: 100%;
-        height: 100%;
-    }
-
-    .sidebar-user-card {
+    /* ─── Sidebar Branding & History ────────────────────────────────────── */
+    .sidebar-brand-row {
         display: flex;
         align-items: center;
         gap: 0.6rem;
-        padding: 0.5rem 0.35rem 0.15rem;
-    }
-
-    .user-name {
+        padding: 0.2rem 0.25rem 0.8rem;
         font-family: var(--font-heading);
-        font-weight: 600;
-        font-size: 0.8rem;
+        font-size: 0.95rem;
+        font-weight: 700;
         color: var(--text-primary);
+        border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 0.8rem;
     }
-
-    .user-email {
-        font-family: var(--font-mono);
-        font-size: 0.62rem;
-        color: var(--text-muted);
-        overflow-wrap: anywhere;
-        margin-top: 0.08rem;
+    .sidebar-brand-mark {
+        color: var(--accent-vector);
+        font-size: 1.2rem;
     }
-
     .sidebar-section-header {
         font-family: var(--font-mono);
         font-size: 0.68rem;
         text-transform: uppercase;
         letter-spacing: 0.09em;
         color: var(--text-muted);
-        margin: 1.2rem 0 0.5rem 0;
+        margin: 1.2rem 0 0.45rem 0;
         font-weight: 600;
     }
-
-    .sidebar-brand-row {
-        display: flex;
-        align-items: center;
-        gap: 0.55rem;
-        padding: 0.15rem 0.25rem 0.7rem;
-        font-family: var(--font-heading);
-        font-size: 0.9rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: var(--text-primary);
-    }
-    .sidebar-brand-mark {
-        color: var(--accent-vector);
-        font-size: 1.15rem;
-    }
-    .sidebar-avatar {
-        width: 2rem;
-        height: 2rem;
-        flex: 0 0 2rem;
-        display: grid;
-        place-items: center;
-        border: 1px solid var(--accent-vector-border);
-        border-radius: 50%;
-        background: var(--accent-vector-bg);
-        color: var(--accent-vector);
-        font: 600 0.67rem var(--font-mono);
-    }
-    .st-key-new_chat button {
-        min-height: 2.25rem;
-        justify-content: flex-start;
-        padding-left: 0.7rem;
-        background: transparent !important;
-        border: 1px solid var(--border-medium) !important;
-        border-radius: var(--radius-md) !important;
-        color: var(--text-primary) !important;
-        font-size: 0.83rem;
-    }
-    .st-key-new_chat button:hover {
-        background: var(--bg-elevated) !important;
-        border-color: var(--border-medium) !important;
-    }
-    .st-key-chat_list {
-        flex: 1 1 auto;
-        min-height: 0;
-        max-height: none;
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: var(--border-medium) transparent;
-        padding-right: 0.1rem;
-    }
-    .st-key-chat_list::-webkit-scrollbar { width: 5px; }
-    .st-key-chat_list::-webkit-scrollbar-thumb {
-        background: var(--border-medium);
-        border-radius: 8px;
-    }
     .chat-group-label {
-        margin: 0.85rem 0 0.28rem;
+        margin: 0.85rem 0 0.3rem;
         padding-left: 0.35rem;
         color: var(--text-muted);
-        font: 500 0.61rem var(--font-mono);
-        letter-spacing: 0.09em;
+        font: 600 0.65rem var(--font-mono);
+        letter-spacing: 0.08em;
         text-transform: uppercase;
     }
-    section[data-testid="stSidebar"] .stButton button {
-        min-height: 2rem;
-        padding: 0.32rem 0.45rem;
-        border: 1px solid transparent;
-        background: transparent;
-        color: var(--text-secondary);
-        font-size: 0.79rem;
-        text-align: left;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        box-shadow: none;
-    }
-    section[data-testid="stSidebar"] .stButton button:hover {
-        background: var(--bg-elevated);
-        color: var(--text-primary);
-        border-color: transparent;
-    }
-    section[data-testid="stSidebar"] .stButton button:focus-visible {
-        outline: 1px solid var(--accent-vector);
-        outline-offset: 1px;
-    }
-    section[data-testid="stSidebar"] [data-testid="stPopover"] > button {
-        min-width: 1.7rem;
-        width: 1.7rem;
-        min-height: 1.8rem;
-        padding: 0;
-        font-size: 1rem;
-        text-align: center;
-    }
     .st-key-chat_active_row {
-        padding-left: 0.25rem;
         border-left: 2px solid var(--accent-vector);
         border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
         background: var(--accent-vector-bg);
     }
-    .st-key-chat_active_row .stButton button {
-        color: var(--text-primary);
+    .st-key-chat_list {
+        max-height: 40vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-medium) transparent;
+        padding-right: 0.2rem;
+        margin-bottom: 0.5rem;
     }
-    .st-key-sidebar_footer {
-        flex: 0 0 auto;
-        padding-top: 0.4rem;
+
+    /* ─── Cards & Containers ────────────────────────────────────────────── */
+    .tech-card {
         background: var(--bg-surface);
-        border-top: 1px solid var(--border-subtle);
-    }
-    section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
-    [data-testid="stLayoutWrapper"]:has(> .stVerticalBlock.st-key-sidebar_footer) {
-        margin-top: auto !important;
-    }
-    .st-key-profile_menu [data-testid="stPopoverButton"] {
-        width: 100%;
-        min-height: 2.5rem;
-        justify-content: flex-start;
-        padding: 0.35rem 0.55rem;
-        border: 1px solid transparent;
-        border-radius: var(--radius-md);
-        background: transparent;
-        color: var(--text-primary);
-        font-family: var(--font-heading);
-        font-size: 0.82rem;
-        font-weight: 600;
-        text-align: left;
-        transition: background 120ms ease, border-color 120ms ease;
-    }
-    .st-key-profile_menu [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] {
-        display: none;
-    }
-    .st-key-profile_menu [data-testid="stPopoverButton"]:hover {
-        background: var(--bg-elevated);
-        border-color: var(--border-subtle);
-    }
-    .st-key-profile_menu [data-testid="stPopoverButton"]:focus-visible {
-        outline: 1px solid var(--accent-vector);
-        outline-offset: 1px;
-    }
-    .st-key-profile_menu [data-testid="stPopoverButton"]::after {
-        content: "⌃";
-        margin-left: auto;
-        color: var(--text-muted);
-        font-size: 0.78rem;
-    }
-    body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content),
-    body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
-        z-index: 1100;
-        overflow: visible;
         border: 1px solid var(--border-medium);
         border-radius: var(--radius-md);
-        background: var(--bg-elevated);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
-        transition:
-            opacity 120ms ease,
-            transform 120ms ease,
-            display 120ms allow-discrete;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
     }
-    body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content) {
-        min-width: 13rem;
-        transform-origin: bottom center;
-    }
-    body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
-        position: fixed !important;
-        position-anchor: --system-status-trigger;
-        position-area: right;
-        position-try-fallbacks: flip-inline;
-        min-width: 15rem;
-        left: auto !important;
-        top: auto !important;
-        bottom: auto !important;
-        transform: none !important;
-        transform-origin: top left;
-        margin-left: 0.45rem;
-    }
-    .st-key-system_status_popup [data-testid="stPopoverButton"] {
-        anchor-name: --system-status-trigger;
-        width: 100%;
-        min-height: 2rem;
-        justify-content: flex-start;
-        padding: 0.32rem 0.45rem;
-        text-align: left;
-    }
-    .st-key-profile_menu .stButton button {
-        width: 100%;
-        min-height: 2rem;
-        justify-content: flex-start;
-        padding: 0.32rem 0.45rem;
-    }
-    @starting-style {
-        body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content),
-        body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
-            opacity: 0;
-            transform: translateY(4px) scale(0.98);
-        }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        body [data-testid="stPopoverBody"]:has(.st-key-profile_menu_content),
-        body [data-testid="stPopoverBody"]:has(.st-key-system_status_content):not(:has(.st-key-profile_menu_content)) {
-            transition: none;
-        }
+
+    .tech-card.highlight {
+        border-color: var(--accent-vector-border);
+        background: linear-gradient(180deg, rgba(56, 189, 248, 0.03) 0%, var(--bg-surface) 100%);
     }
 
     /* ─── Query Studio: Provenance & Route Badges ──────────────────────── */
@@ -593,59 +259,28 @@ st.markdown("""
         font-family: var(--font-mono);
         font-size: 0.75rem;
     }
-
     .provenance-bar.vector {
         background: var(--accent-vector-bg);
         border: 1px solid var(--accent-vector-border);
         color: var(--accent-vector);
     }
-
     .provenance-bar.graph {
         background: var(--accent-graph-bg);
         border: 1px solid var(--accent-graph-border);
         color: var(--accent-graph);
     }
-
     .route-capsule {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.45rem;
         font-weight: 600;
     }
-
     .latency-tag {
         color: var(--text-muted);
         font-size: 0.7rem;
     }
 
-    /* Trace timeline cards */
-    .trace-timeline-step {
-        border-left: 2px solid var(--border-medium);
-        padding-left: 0.85rem;
-        margin-bottom: 0.75rem;
-    }
-    .trace-timeline-step.active {
-        border-left-color: var(--accent-vector);
-    }
-    .trace-step-name {
-        font-family: var(--font-heading);
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-    .trace-step-desc {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        margin-top: 0.15rem;
-    }
-    .trace-step-timing {
-        font-family: var(--font-mono);
-        font-size: 0.68rem;
-        color: var(--text-muted);
-        margin-top: 0.2rem;
-    }
-
-    /* Passage Card */
+    /* Passage Evidence Card */
     .passage-card {
         background: var(--bg-surface);
         border: 1px solid var(--border-subtle);
@@ -665,16 +300,17 @@ st.markdown("""
     .passage-text {
         font-size: 0.78rem;
         color: var(--text-secondary);
-        line-height: 1.5;
+        line-height: 1.55;
     }
 
-    /* Triples Table */
+    /* Triples Catalog Item */
     .triples-item {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.4rem 0.6rem;
+        padding: 0.4rem 0.65rem;
         background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
         border-radius: var(--radius-sm);
         margin-bottom: 0.35rem;
         font-family: var(--font-mono);
@@ -684,275 +320,72 @@ st.markdown("""
     .triple-rel { color: var(--accent-graph); }
     .triple-obj { color: var(--text-primary); font-weight: 600; }
 
-    /* ─── Technical Cards & Metric Containers ──────────────────────────── */
-    .tech-card {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-medium);
-        border-radius: var(--radius-md);
-        padding: 1.25rem;
-        margin-bottom: 1rem;
+    /* Pulse animation */
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
     }
-    /* Quick Prompts */
-    .prompt-chip {
-        display: inline-block;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-sm);
-        padding: 0.4rem 0.8rem;
-        font-size: 0.78rem;
-        color: var(--text-secondary);
-        margin: 0.2rem 0.3rem 0.2rem 0;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .prompt-chip:hover {
-        border-color: var(--accent-vector);
-        color: var(--text-primary);
-    }
-
-    /* Interactive Buttons */
-    [data-testid="stBaseButton-primary"],
-    [data-testid="stBaseButton-primaryFormSubmit"] {
-        background: var(--accent-vector) !important;
-        color: #0b0e14 !important;
-        font-family: var(--font-heading) !important;
-        font-weight: 700 !important;
-        font-size: 0.84rem !important;
-        border-radius: var(--radius-sm) !important;
-        border: none !important;
-    }
-    [data-testid="stBaseButton-primary"]:hover,
-    [data-testid="stBaseButton-primaryFormSubmit"]:hover {
-        filter: brightness(1.1);
-    }
-    [data-testid="stBaseButton-secondary"] {
-        background: var(--bg-elevated) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-medium) !important;
-        border-radius: var(--radius-sm) !important;
-        font-family: var(--font-heading) !important;
-        font-size: 0.84rem !important;
-    }
-
-    /* Form Inputs */
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextArea"] textarea {
-        background: var(--bg-input) !important;
-        border: 1px solid var(--border-medium) !important;
-        border-radius: var(--radius-sm) !important;
-        color: var(--text-primary) !important;
-        font-family: var(--font-body) !important;
-    }
-    [data-testid="stTextInput"] input:focus,
-    [data-testid="stTextArea"] textarea:focus {
-        border-color: var(--border-focus) !important;
-    }
-
-    /* Chat Messages */
-    [data-testid="stChatMessage"] {
-        background: transparent !important;
-        border-bottom: 1px solid var(--border-subtle) !important;
-        padding: 1.2rem 0.5rem !important;
-    }
-    /* ─── Ultra-Refined Engineering Prompt Console ───────────────────────── */
-    [data-testid="stBottom"] {
-        background: linear-gradient(180deg, rgba(11, 14, 20, 0) 0%, rgba(11, 14, 20, 0.95) 30%, #0b0e14 100%) !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.04) !important;
-        backdrop-filter: blur(12px) !important;
-        padding-top: 0.5rem !important;
-    }
-    [data-testid="stBottom"] > div {
-        background: transparent !important;
-        padding-bottom: 1.5rem !important;
-    }
-
-    /* Outer Chat Input Container */
-    [data-testid="stChatInput"],
-    .stChatInput {
-        background: #111622 !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        border-radius: 14px !important;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        padding: 0.35rem 0.65rem !important;
-        max-width: 860px !important;
-        margin: 0 auto !important;
-    }
-
-    [data-testid="stChatInput"]:hover,
-    .stChatInput:hover {
-        border-color: rgba(56, 189, 248, 0.35) !important;
-        box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.08) !important;
-    }
-
-    [data-testid="stChatInput"]:focus-within,
-    .stChatInput:focus-within {
-        border-color: #38bdf8 !important;
-        background: #151d2d !important;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px #38bdf8, 0 0 22px rgba(56, 189, 248, 0.22) !important;
-    }
-
-    /* Completely eliminate nested BaseWeb borders and backgrounds */
-    [data-testid="stChatInput"] div,
-    [data-testid="stChatInput"] [data-baseweb="textarea"],
-    [data-testid="stChatInput"] [data-baseweb="base-input"],
-    .stChatInput div,
-    .stChatInput [data-baseweb="textarea"],
-    .stChatInput [data-baseweb="base-input"] {
-        background: transparent !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-    }
-
-    /* BaseWeb inner input focus overrides */
-    [data-testid="stChatInput"] [data-baseweb="base-input"]:focus-within,
-    .stChatInput [data-baseweb="base-input"]:focus-within {
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-
-    /* Textarea */
-    [data-testid="stChatInputTextArea"],
-    [data-testid="stChatInput"] textarea,
-    .stChatInput textarea {
-        background: transparent !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        color: #f8fafc !important;
-        font-family: var(--font-body) !important;
-        font-size: 0.93rem !important;
-        font-weight: 450 !important;
-        line-height: 1.5 !important;
-        padding: 0.55rem 0.75rem !important;
-        min-height: 2.65rem !important;
-        caret-color: #38bdf8 !important;
-    }
-
-    [data-testid="stChatInputTextArea"]::placeholder,
-    [data-testid="stChatInput"] textarea::placeholder,
-    .stChatInput textarea::placeholder {
-        color: #64748b !important;
-        font-size: 0.9rem !important;
-        font-weight: 400 !important;
-    }
-
-    /* Submit Button (Precision Pill) */
-    [data-testid="stChatInputSubmitButton"],
-    [data-testid="stChatInput"] button,
-    .stChatInput button {
-        border-radius: 9px !important;
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        border: none !important;
-        margin-right: 0.2rem !important;
-        margin-bottom: 0.2rem !important;
-        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    }
-
-    /* When Disabled / Empty */
-    [data-testid="stChatInputSubmitButton"]:disabled,
-    [data-testid="stChatInput"] button:disabled {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.07) !important;
-        color: rgba(148, 163, 184, 0.35) !important;
-        cursor: not-allowed !important;
-        transform: none !important;
-        box-shadow: none !important;
-    }
-
-    [data-testid="stChatInputSubmitButton"]:disabled svg,
-    [data-testid="stChatInput"] button:disabled svg {
-        fill: rgba(148, 163, 184, 0.35) !important;
-    }
-
-    /* When Enabled / Active (user entered query) */
-    [data-testid="stChatInputSubmitButton"]:not(:disabled),
-    [data-testid="stChatInput"] button:not(:disabled) {
-        background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%) !important;
-        border: 1px solid #38bdf8 !important;
-        color: #0b0e14 !important;
-        box-shadow: 0 0 16px rgba(56, 189, 248, 0.45) !important;
-        cursor: pointer !important;
-    }
-
-    [data-testid="stChatInputSubmitButton"]:not(:disabled):hover,
-    [data-testid="stChatInput"] button:not(:disabled):hover {
-        transform: scale(1.06) translateY(-1px) !important;
-        box-shadow: 0 0 22px rgba(56, 189, 248, 0.65) !important;
-        filter: brightness(1.1) !important;
-    }
-
-    [data-testid="stChatInputSubmitButton"]:not(:disabled) svg,
-    [data-testid="stChatInput"] button:not(:disabled) svg {
-        fill: #0b0e14 !important;
-        font-weight: 700 !important;
-    }
-
-    /* Telemetry Context Bar above input */
-    .chat-console-footer-bar {
-        max-width: 860px;
-        margin: 1.2rem auto 0.45rem auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        padding: 0 0.25rem;
-    }
-    .console-telemetry-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-    }
-    .telemetry-live-dot {
-        width: 6px;
-        height: 6px;
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        background: #10b981;
-        box-shadow: 0 0 8px #10b981;
-        display: inline-block;
-    }
-    .telemetry-label {
-        color: var(--accent-vector);
-        font-weight: 600;
-        letter-spacing: 0.05em;
-    }
-    .telemetry-sub {
-        color: var(--text-muted);
-    }
-    .console-shortcuts-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        color: var(--text-muted);
-    }
-    .key-hint {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-medium);
-        border-radius: 3px;
-        padding: 0.1rem 0.35rem;
-        font-size: 0.68rem;
-        color: var(--text-secondary);
-    }
-    .key-sep {
-        color: var(--border-medium);
+        background: var(--accent-vector);
+        box-shadow: 0 0 8px var(--accent-vector);
+        animation: pulse 1.5s infinite;
     }
 
-    /* Hide Streamlit "Press Enter to submit form" hint */
-    .stTextInput small,
-    [data-testid="InputInstructions"] {
-        display: none !important;
+    /* ─── Eliminate Streamlit Stale / Rerun Fading & Flashing ─────────── */
+    /* Streamlit dims elements to opacity ~0.33 with a 200ms transition on every rerun. */
+    /* Overriding this eliminates the jarring fade in / fade out effect on updates. */
+    [data-stale="true"],
+    .stApp [data-stale="true"],
+    [data-testid="stAppViewContainer"] [data-stale="true"],
+    [data-testid="stAppViewBlockContainer"] [data-stale="true"],
+    [data-testid="stMain"] [data-stale="true"],
+    [data-testid="stMainBlockContainer"] [data-stale="true"],
+    [data-testid="stSidebar"] [data-stale="true"],
+    [data-testid="stSidebarContent"] [data-stale="true"],
+    [data-testid="stSidebarUserContent"] [data-stale="true"],
+    [data-testid="stElementContainer"][data-stale="true"],
+    [data-testid="stVerticalBlock"][data-stale="true"],
+    [data-testid="stVerticalBlockBorderWrapper"][data-stale="true"],
+    [data-testid="stHorizontalBlock"][data-stale="true"],
+    [data-testid="stChatMessage"][data-stale="true"],
+    [data-testid="stBottom"][data-stale="true"],
+    [data-testid="stChatInput"][data-stale="true"],
+    .element-container[data-stale="true"],
+    .stMarkdown[data-stale="true"],
+    div[data-testid="stExpander"][data-stale="true"],
+    div[data-testid="stTabs"][data-stale="true"],
+    div[data-baseweb="tab-list"][data-stale="true"],
+    div[data-baseweb="tab-panel"][data-stale="true"] {
+        opacity: 1 !important;
+        transition: none !important;
+        filter: none !important;
+    }
+
+    /* Prevent opacity and filter transitions on all element wrappers */
+    [data-testid="stElementContainer"],
+    [data-testid="stVerticalBlock"],
+    [data-testid="stVerticalBlockBorderWrapper"],
+    [data-testid="stHorizontalBlock"],
+    [data-testid="stAppViewBlockContainer"],
+    .element-container,
+    .stChatMessage,
+    .stMarkdown {
+        transition: opacity 0s !important;
+    }
+
+    /* Ensure app view remains steady during script execution */
+    .stApp[data-test-script-state="running"] [data-stale="true"],
+    .stApp[data-test-script-state="running"] [data-testid="stElementContainer"],
+    .stApp[data-test-script-state="running"] .element-container {
+        opacity: 1 !important;
+        transition: none !important;
+        filter: none !important;
     }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 # ─── Session State Initialization ─────────────────────────────────────────────
 
@@ -980,6 +413,14 @@ if "prompt_seed" not in st.session_state:
     st.session_state.prompt_seed = ""
 if "graph_cache" not in st.session_state:
     st.session_state.graph_cache = None
+if "upload_processing" not in st.session_state:
+    st.session_state.upload_processing = False
+if "upload_message" not in st.session_state:
+    st.session_state.upload_message = None
+if "suggested_inquiries" not in st.session_state:
+    st.session_state.suggested_inquiries = None
+if "suggestions_context_key" not in st.session_state:
+    st.session_state.suggestions_context_key = None
 
 # ─── API & Helper Utilities ───────────────────────────────────────────────────
 
@@ -998,6 +439,8 @@ def clear_session():
     st.session_state.rename_target = None
     st.session_state.delete_confirm_target = None
     st.session_state.graph_cache = None
+    st.session_state.suggested_inquiries = None
+    st.session_state.suggestions_context_key = None
 
 def expire_session():
     clear_session()
@@ -1014,6 +457,8 @@ def save_auth_response(response):
     st.session_state.conversations = None
     st.session_state.conversations_error = False
     st.session_state.auth_error = None
+    st.session_state.suggested_inquiries = None
+    st.session_state.suggestions_context_key = None
     st.rerun()
 
 def response_detail(response) -> str:
@@ -1075,6 +520,8 @@ def load_conversation(conversation_id: str) -> bool:
         st.session_state.active_conversation_id = conversation_id
         st.session_state.rename_target = None
         st.session_state.delete_confirm_target = None
+        st.session_state.suggested_inquiries = None
+        st.session_state.suggestions_context_key = None
         return True
     except requests.RequestException:
         st.sidebar.error("Couldn't load this conversation.")
@@ -1092,6 +539,154 @@ def load_graph_data() -> dict:
         except Exception:
             pass
     return {"nodes": [], "edges": []}
+
+def _get_quick_fallback_suggestions() -> list[str]:
+    doc_label = "the ingested documents"
+    if GRAPH_FILE_PATH.exists():
+        try:
+            with open(GRAPH_FILE_PATH, "r", encoding="utf-8") as f:
+                g = json.load(f)
+                for n in g.get("nodes", []):
+                    src = n.get("properties", {}).get("source")
+                    if src:
+                        doc_label = src
+                        break
+        except Exception:
+            pass
+
+    return [
+        f"What are the core technical concepts and methodologies covered in {doc_label}?",
+        "How does the dual-retrieval routing mechanism classify queries?",
+        "What are the primary relationship triples and dependencies in the knowledge graph?",
+    ]
+
+def fetch_suggested_inquiries(force_refresh: bool = False, allow_llm: bool = True) -> list[str]:
+    """
+    Fetch dynamic, context-aware technical inquiries generated by the local LLM.
+    Guarantees zero latency during output generation by only allowing LLM calls
+    after output generation completes, on explicit refresh, or when initial state is idle.
+    """
+    current_key = f"{st.session_state.active_conversation_id}_{len(st.session_state.messages)}_{graph_node_count}"
+
+    # Return cached suggestions if valid and not forcing a refresh
+    if (
+        not force_refresh
+        and st.session_state.suggested_inquiries is not None
+        and st.session_state.suggestions_context_key == current_key
+    ):
+        return st.session_state.suggested_inquiries
+
+    # If already cached and LLM generation is not permitted during this render pass, return cached
+    if not allow_llm and st.session_state.suggested_inquiries is not None:
+        return st.session_state.suggested_inquiries
+
+    # If LLM generation is not permitted right now, use fast fallback without blocking
+    if not allow_llm:
+        fallback = _get_quick_fallback_suggestions()
+        st.session_state.suggested_inquiries = fallback
+        st.session_state.suggestions_context_key = current_key
+        return fallback
+
+    try:
+        resp = requests.post(
+            API_SUGGESTED_INQUIRIES,
+            json={
+                "conversation_id": st.session_state.active_conversation_id,
+                "messages": st.session_state.messages if st.session_state.messages else None,
+                "force_refresh": force_refresh,
+            },
+            headers=auth_headers(),
+            timeout=30,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            suggestions = data.get("suggestions", [])
+            if suggestions:
+                st.session_state.suggested_inquiries = suggestions
+                st.session_state.suggestions_context_key = current_key
+                return suggestions
+    except Exception:
+        pass
+
+    fallback = _get_quick_fallback_suggestions()
+    st.session_state.suggested_inquiries = fallback
+    st.session_state.suggestions_context_key = current_key
+    return fallback
+
+def ingest_documents(files) -> tuple[bool, str]:
+    """Execute multipart document upload to FastAPI ingestion endpoint."""
+    if not files:
+        return False, "No files selected."
+    try:
+        files_payload = [
+            ("files", (f.name, f.getvalue(), f.type or "application/octet-stream"))
+            for f in files
+        ]
+        resp = requests.post(
+            API_UPLOAD,
+            files=files_payload,
+            headers=auth_headers(),
+            timeout=60,
+        )
+        if resp.status_code in (200, 201):
+            data = resp.json()
+            st.session_state.upload_processing = True
+            st.session_state.upload_message = data.get("message", "Files accepted for background processing.")
+            st.session_state.graph_cache = None
+            st.session_state.suggested_inquiries = None
+            st.session_state.suggestions_context_key = None
+            return True, data.get("message", "Files accepted for background processing.")
+        elif resp.status_code == 401:
+            expire_session()
+            return False, "Session expired."
+        elif resp.status_code == 409:
+            return False, response_detail(resp)
+        elif resp.status_code == 503:
+            return False, response_detail(resp)
+        else:
+            return False, f"Upload failed: {response_detail(resp)}"
+    except requests.ConnectionError:
+        return False, "Cannot connect to API backend at localhost:8000."
+    except Exception as ex:
+        return False, f"Upload error: {ex}"
+
+@st.fragment(run_every="2s")
+def render_sidebar_upload_monitor():
+    """Isolated background fragment for monitoring document ingestion without full-page reruns."""
+    if not st.session_state.get("upload_processing"):
+        return
+    try:
+        s_resp = requests.get(API_UPLOAD_STATUS, headers=auth_headers(), timeout=5)
+        if s_resp.status_code == 200:
+            status_data = s_resp.json()
+            is_processing = status_data.get("is_processing", False)
+            stage = status_data.get("stage", "processing")
+            progress = float(status_data.get("progress", 0.0))
+            current_file = status_data.get("current_file", "")
+            error = status_data.get("error")
+
+            if is_processing:
+                st.markdown(
+                    f'<div style="font-size:0.75rem; color:var(--accent-vector); margin-top:0.4rem;">'
+                    f'<span class="pulse-dot" style="display:inline-block; vertical-align:middle; margin-right:4px;"></span> '
+                    f'Ingesting: <strong>{html.escape(stage.replace("_", " ").title())}</strong>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+                if current_file:
+                    st.caption(f"File: `{current_file}`")
+                st.progress(min(max(progress, 0.0), 1.0))
+            else:
+                st.session_state.upload_processing = False
+                if error:
+                    st.error(f"Processing error: {error}", icon=":material/error:")
+                    st.session_state.upload_message = None
+                else:
+                    st.session_state.upload_message = "✅ Ingestion complete! Knowledge base updated."
+                    st.session_state.graph_cache = None
+                st.rerun()
+    except Exception:
+        pass
 
 # ─── Auth Page: Split Engineering Gateway ─────────────────────────────────────
 
@@ -1151,7 +746,7 @@ def render_auth_page():
                     st.caption("Credentials verified against local encrypted SQLite auth store.")
                     in_email = st.text_input("Operator Email", placeholder="user@local.lan", key="signin_email")
                     in_password = st.text_input("Master Password", type="password", key="signin_password")
-                    submit = st.form_submit_button("Launch Workspace", type="primary", use_container_width=True)
+                    submit = st.form_submit_button("Launch Workspace", type="primary", width="stretch")
                     
                     if submit:
                         if not in_email.strip() or not in_password:
@@ -1179,7 +774,7 @@ def render_auth_page():
                     new_email = st.text_input("Email", placeholder="alex@local.lan")
                     new_password = st.text_input("Password (min 8 chars)", type="password")
                     confirm_password = st.text_input("Confirm Password", type="password")
-                    submit_reg = st.form_submit_button("Register & Initialize", type="primary", use_container_width=True)
+                    submit_reg = st.form_submit_button("Register & Initialize", type="primary", width="stretch")
                     
                     if submit_reg:
                         if not new_name.strip() or not new_email.strip() or not new_password:
@@ -1220,7 +815,7 @@ if not st.session_state.access_token:
     render_auth_page()
     st.stop()
 
-# Load once per session-state cache invalidation, not on every Streamlit rerun.
+# Load conversations once per session-state invalidation
 if st.session_state.conversations is None:
     refresh_conversations()
 
@@ -1233,16 +828,60 @@ db_ready = db_info.get("ready", False)
 graph_node_count = db_info.get("graph_nodes", 0)
 graph_edge_count = db_info.get("graph_edges", 0)
 
-# ─── Auxiliary Sidebar ────────────────────────────────────────────────────────
+# ─── Sidebar Navigation & Controls ───────────────────────────────────────────
 
 with st.sidebar:
     user = st.session_state.get("current_user") or {}
     st.markdown(
-        '<div class="sidebar-brand-row"><span class="sidebar-brand-mark">◈</span>'
-        '<span>Local GraphRAG</span></div>',
+        '<div class="sidebar-brand-row">'
+        '<span class="sidebar-brand-mark">◈</span>'
+        '<span>Local GraphRAG</span>'
+        '</div>',
         unsafe_allow_html=True,
     )
-    if st.button("＋  New chat", key="new_chat", use_container_width=True):
+    
+    # ── Sidebar Document Ingestion (Always Visible & Accessible) ─────────────
+    st.markdown('<div class="sidebar-section-header">Knowledge Base</div>', unsafe_allow_html=True)
+    
+    with st.expander(
+        "📄 Document Ingestion", 
+        expanded=(not db_ready or st.session_state.upload_processing),
+        icon=":material/upload_file:"
+    ):
+        st.caption("Upload PDF or DOCX files into ChromaDB & NetworkX Knowledge Graph.")
+        sidebar_files = st.file_uploader(
+            "Upload documents",
+            type=["pdf", "docx", "doc"],
+            accept_multiple_files=True,
+            key="sidebar_file_uploader",
+            label_visibility="collapsed",
+            help="PDF / DOCX files up to 100MB each."
+        )
+        if sidebar_files:
+            st.caption(f"📎 **{len(sidebar_files)} file(s) staged**")
+            for sf in sidebar_files:
+                st.caption(f"• `{sf.name}` ({sf.size / 1024:.1f} KB)")
+            if st.button(
+                "Ingest Staged Files",
+                key="btn_sidebar_ingest",
+                type="primary",
+                icon=":material/rocket_launch:",
+                width="stretch",
+                disabled=not lm_online or st.session_state.upload_processing,
+            ):
+                success, msg = ingest_documents(sidebar_files)
+                if success:
+                    st.rerun()
+                else:
+                    st.error(msg)
+        
+        # Real-time processing monitor in sidebar (isolated in background fragment)
+        if st.session_state.upload_processing:
+            render_sidebar_upload_monitor()
+
+    # ── Sidebar Conversations ────────────────────────────────────────────────
+    st.markdown('<div class="sidebar-section-header">Conversations</div>', unsafe_allow_html=True)
+    if st.button("New chat", icon=":material/add:", key="new_chat", width="stretch"):
         st.session_state.active_conversation_id = None
         st.session_state.messages = []
         st.session_state.traces = {}
@@ -1252,13 +891,13 @@ with st.sidebar:
 
     chat_search = st.text_input(
         "Search chats",
-        placeholder="Search chats",
+        placeholder="Search chats...",
         label_visibility="collapsed",
         key="chat_search",
     )
     conversations = st.session_state.conversations or []
     if st.session_state.conversations_error:
-        st.caption("Couldn't load chats")
+        st.caption("Couldn't load chats.")
     elif not conversations:
         st.markdown(
             '<div style="padding:0.7rem 0.35rem;color:var(--text-muted);font-size:0.75rem;">'
@@ -1308,7 +947,7 @@ with st.sidebar:
                             if st.button(
                                 conversation["title"],
                                 key=f"chat_select_{conversation_id}",
-                                use_container_width=True,
+                                width="stretch",
                             ):
                                 if load_conversation(conversation_id):
                                     st.rerun()
@@ -1323,8 +962,9 @@ with st.sidebar:
                                     )
                                     if st.button(
                                         "Save",
+                                        icon=":material/check:",
                                         key=f"chat_rename_save_{conversation_id}",
-                                        use_container_width=True,
+                                        width="stretch",
                                     ):
                                         try:
                                             response = requests.patch(
@@ -1345,8 +985,9 @@ with st.sidebar:
                                             st.sidebar.error("Couldn't rename this conversation.")
                                 elif st.button(
                                     "Rename",
+                                    icon=":material/edit:",
                                     key=f"chat_rename_{conversation_id}",
-                                    use_container_width=True,
+                                    width="stretch",
                                 ):
                                     st.session_state.rename_target = conversation_id
                                     st.rerun()
@@ -1354,8 +995,9 @@ with st.sidebar:
                                 if st.session_state.delete_confirm_target == conversation_id:
                                     if st.button(
                                         "Confirm delete",
+                                        icon=":material/delete_forever:",
                                         key=f"chat_delete_confirm_{conversation_id}",
-                                        use_container_width=True,
+                                        width="stretch",
                                     ):
                                         try:
                                             response = requests.delete(
@@ -1381,63 +1023,54 @@ with st.sidebar:
                                     if st.button(
                                         "Cancel",
                                         key=f"chat_delete_cancel_{conversation_id}",
-                                        use_container_width=True,
+                                        width="stretch",
                                     ):
                                         st.session_state.delete_confirm_target = None
                                         st.rerun()
                                 elif st.button(
                                     "Delete",
+                                    icon=":material/delete:",
                                     key=f"chat_delete_{conversation_id}",
-                                    use_container_width=True,
+                                    width="stretch",
                                 ):
                                     st.session_state.delete_confirm_target = conversation_id
                                     st.rerun()
 
-    with st.container(key="sidebar_footer"):
+    # ── User Profile & System Status Popover ──────────────────────────────────
+    with st.container():
+        st.divider()
         name = str(user.get("name", "Operator"))
-        initials = "".join(part[0] for part in name.split()[:2]).upper() or "OP"
-        avatar_letter = initials[0]
-        avatar = (
-            chr(0x24B6 + ord(avatar_letter) - ord("A"))
-            if "A" <= avatar_letter <= "Z"
-            else avatar_letter
-        )
-        profile_label = f"{avatar}  {html.escape(name.upper())}"
         with st.popover(
-            profile_label,
+            f"👤  {html.escape(name)}",
             key="profile_menu",
-            use_container_width=True,
+            width="stretch",
         ):
-            with st.container(key="profile_menu_content"):
-                with st.popover(
-                    "System status",
-                    key="system_status_popup",
-                    icon=":material/monitor_heart:",
-                    use_container_width=True,
-                ):
-                    with st.container(key="system_status_content"):
-                        st.markdown(
-                            f'<div style="font-family:var(--font-mono);font-size:0.72rem;'
-                            f'color:var(--text-secondary);line-height:1.8;">'
-                            f'<div>LM Studio: <strong style="color:{"var(--accent-graph)" if lm_online else "var(--accent-alert)"};">'
-                            f'{"Online" if lm_online else "Offline"}</strong></div>'
-                            f'<div>Indexed entities: <strong style="color:var(--text-primary);">{graph_node_count}</strong></div>'
-                            f'<div>Relationships: <strong style="color:var(--text-primary);">{graph_edge_count}</strong></div>'
-                            "</div>",
-                            unsafe_allow_html=True,
-                        )
-                if st.button(
-                    "Sign out",
-                    key="sign_out",
-                    icon=":material/logout:",
-                    use_container_width=True,
-                ):
-                    try:
-                        requests.post(API_AUTH_LOGOUT, headers=auth_headers(), timeout=5)
-                    except requests.RequestException:
-                        pass
-                    clear_session()
-                    st.rerun()
+            st.markdown(f"**Operator:** {html.escape(name)}")
+            st.caption(f"Email: {user.get('email', 'local@domain')}")
+            st.divider()
+            st.markdown("**Local Telemetry:**")
+            st.markdown(
+                f'<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-secondary);line-height:1.8;">'
+                f'<div>LM Studio: <strong style="color:{"var(--accent-graph)" if lm_online else "var(--accent-alert)"};">'
+                f'{"Online" if lm_online else "Offline"}</strong></div>'
+                f'<div>Indexed entities: <strong style="color:var(--text-primary);">{graph_node_count}</strong></div>'
+                f'<div>Graph triples: <strong style="color:var(--text-primary);">{graph_edge_count}</strong></div>'
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            st.divider()
+            if st.button(
+                "Sign out",
+                key="sign_out",
+                icon=":material/logout:",
+                width="stretch",
+            ):
+                try:
+                    requests.post(API_AUTH_LOGOUT, headers=auth_headers(), timeout=5)
+                except requests.RequestException:
+                    pass
+                clear_session()
+                st.rerun()
 
 # ─── Top Global Application Shell Bar ─────────────────────────────────────────
 
@@ -1445,13 +1078,13 @@ lm_dot_class = "online" if lm_online else "offline"
 lm_label = "LM Studio Online" if lm_online else "LM Studio Offline"
 db_label = f"Graph: {graph_node_count} nodes · {graph_edge_count} triples" if db_ready else "Index Empty"
 
-st.markdown(f"""
+st.html(f"""
 <div class="app-shell-header">
     <div class="brand-cluster">
         <div class="brand-mark">◈</div>
         <div>
-            <div class="brand-title">Local-Agentic-GraphRAG <span style="font-size:0.75rem; color:var(--accent-vector); font-weight:600; vertical-align:middle; margin-left:0.4rem;">v2.0</span></div>
-            <div class="brand-subtitle">Dual-Retrieval Studio</div>
+            <div class="brand-title">Local-Agentic-GraphRAG Studio</div>
+            <div class="brand-subtitle">Air-Gapped Academic Multi-Agent RAG Engine</div>
         </div>
     </div>
     <div class="telemetry-strip">
@@ -1465,13 +1098,13 @@ st.markdown(f"""
         </div>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""")
 
-# ─── Master Workspace Navigation ──────────────────────────────────────────────
+# ─── Master Workspace Navigation Tabs ─────────────────────────────────────────
 
 tab_query, tab_graph = st.tabs([
-    "💬  Query Studio",
-    "🕸️  Knowledge Graph Explorer"
+    "Query Studio",
+    "Knowledge Graph Explorer",
 ])
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1480,68 +1113,74 @@ tab_query, tab_graph = st.tabs([
 
 with tab_query:
     st.markdown("""
-    <div style="margin-bottom: 1rem;">
-        <h3 style="font-size:1.1rem; margin-bottom:0.2rem;">Dual-Retrieval Reasoning Workspace</h3>
-        <p style="color:var(--text-secondary); font-size:0.84rem; margin:0;">
-            Gemma 4 dynamically routes questions between dense semantic vectors (ChromaDB) and knowledge graph triples.
+    <div style="margin-bottom: 0.8rem;">
+        <h3 style="font-size:1.15rem; margin-bottom:0.2rem;">Dual-Retrieval Reasoning Workspace</h3>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin:0;">
+            Gemma 4 dynamically routes academic questions between dense semantic vectors (ChromaDB) and relational knowledge graph triples.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
     if not lm_online:
-        st.markdown("""
-        <div class="tech-card" style="border-left: 3px solid var(--accent-alert);">
-            <strong style="color:var(--accent-alert);">⚠️ LM Studio Is Offline</strong>
-            <div style="color:var(--text-secondary); font-size:0.82rem; margin-top:0.3rem;">
-                Unable to contact LM Studio at <code>http://localhost:1234/v1</code>.<br>
-                Please start LM Studio and load <code>google/gemma-4-e4b</code> and <code>text-embedding-nomic-embed-text-v1.5</code>.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.warning(
+            "⚠️ **LM Studio is offline.** Please launch LM Studio at `http://localhost:1234/v1` "
+            "with `google/gemma-4-e4b` and `text-embedding-nomic-embed-text-v1.5` loaded.",
+            icon=":material/warning:"
+        )
 
     if not db_ready:
-        st.markdown("""
-        <div class="tech-card" style="border-left: 3px solid var(--accent-router);">
-            <strong style="color:var(--accent-router);">ℹ️ No Indexed Data Available</strong>
-            <div style="color:var(--text-secondary); font-size:0.82rem; margin-top:0.3rem;">
-                No document chunks or graph nodes were detected. Query results and graph exploration may be limited until data is indexed.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.info(
+            "ℹ️ **No documents indexed yet.** Use the **Document Ingestion** tool in the side panel to upload PDF or DOCX documents.",
+            icon=":material/info:"
+        )
 
-    # Empty State with Recommended Queries
+    # ── Upload Status Notification Banner ────────────────────────────────────
+    if st.session_state.upload_message:
+        st.success(st.session_state.upload_message, icon=":material/check_circle:")
+
+    # ── Empty State & Suggested Technical Inquiries ──────────────────────────
     if not st.session_state.messages:
         st.markdown("""
-        <div class="tech-card" style="text-align:center; padding: 2.5rem 1.5rem; background: var(--bg-surface);">
-            <div style="font-size: 1.8rem; color:var(--accent-vector); margin-bottom:0.5rem;">◈</div>
-            <h4 style="margin-bottom:0.3rem;">Ready for Investigation</h4>
-            <p style="color:var(--text-muted); font-size:0.85rem; max-width:540px; margin: 0 auto 1.5rem auto;">
+        <div class="tech-card" style="text-align:center; padding: 2.2rem 1.5rem; background: var(--bg-surface); margin-top:0.8rem;">
+            <div style="font-size: 1.8rem; color:var(--accent-vector); margin-bottom:0.4rem;">◈</div>
+            <h4 style="margin-bottom:0.25rem;">Ready for Investigation</h4>
+            <p style="color:var(--text-muted); font-size:0.85rem; max-width:540px; margin: 0 auto 1.2rem auto;">
                 Ask technical and conceptual questions. The query router analyzes whether to traverse semantic passages or relational concept triples.
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("<div style='font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); margin-bottom:0.4rem;'>SUGGESTED TECHNICAL INQUIRIES:</div>", unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            if st.button("What is the primary objective of Local GraphRAG?", use_container_width=True):
-                st.session_state.prompt_seed = "What is the primary objective of Local GraphRAG?"
-                st.rerun()
-        with c2:
-            if st.button("How does the Dual-Retrieval architecture work?", use_container_width=True):
-                st.session_state.prompt_seed = "How does the Dual-Retrieval architecture work?"
-                st.rerun()
-        with c3:
-            if st.button("What are the key technical modules of this system?", use_container_width=True):
-                st.session_state.prompt_seed = "What are the key technical modules of this system?"
+        hdr_col, ref_col = st.columns([0.88, 0.12], vertical_alignment="center")
+        with hdr_col:
+            st.markdown(
+                "<div style='font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); margin-bottom:0.4rem; font-weight:600;'>SUGGESTED TECHNICAL INQUIRIES:</div>",
+                unsafe_allow_html=True,
+            )
+        with ref_col:
+            if st.button("Refresh", key="refresh_sug_empty", icon=":material/refresh:", width="stretch", help="Generate fresh inquiries with LLM"):
+                with st.spinner("Generating fresh inquiries..."):
+                    fetch_suggested_inquiries(force_refresh=True, allow_llm=True)
                 st.rerun()
 
-    # Render Conversation Messages with Inline Provenance
+        # If a seed query is pending, do not run LLM calls that delay query execution
+        is_query_pending = bool(st.session_state.prompt_seed)
+        empty_suggestions = fetch_suggested_inquiries(
+            allow_llm=not is_query_pending and (st.session_state.suggested_inquiries is None)
+        )
+        if empty_suggestions:
+            cols = st.columns(len(empty_suggestions))
+            for idx, (col, q) in enumerate(zip(cols, empty_suggestions)):
+                with col:
+                    if st.button(q, key=f"sug_empty_{idx}", width="stretch"):
+                        st.session_state.prompt_seed = q
+                        st.rerun()
+
+    # ── Render Conversation Messages with Inline Provenance ──────────────────
     for i, msg in enumerate(st.session_state.messages):
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
             
-            # If this is an assistant message and we have trace metadata
+            # If assistant message has trace metadata
             if msg["role"] == "assistant" and i in st.session_state.traces:
                 trace_list = st.session_state.traces[i]
                 route_used = "vector"
@@ -1552,7 +1191,7 @@ with tab_query:
                         route_used = step.get("route_chosen", "vector")
                     total_latency += step.get("latency_sec", 0.0)
 
-                route_label = "Vector Semantic Search" if route_used == "vector" else "Knowledge Graph Traversal"
+                route_label = "Vector Semantic Search (ChromaDB)" if route_used == "vector" else "Knowledge Graph Traversal (NetworkX)"
                 badge_class = "vector" if route_used == "vector" else "graph"
                 icon = "⊞" if route_used == "vector" else "☊"
 
@@ -1573,10 +1212,10 @@ with tab_query:
                         for s in trace_list:
                             step_name = s.get("step", "").replace("_", " ").title()
                             st.markdown(f"""
-                            <div class="trace-timeline-step active">
-                                <div class="trace-step-name">{step_name}</div>
-                                <div class="trace-step-desc">{s.get('description', '')}</div>
-                                <div class="trace-step-timing">Execution: {s.get('latency_sec', 0)}s</div>
+                            <div class="tech-card" style="padding:0.65rem 0.85rem; margin-bottom:0.5rem; border-left:3px solid var(--accent-vector);">
+                                <div style="font-family:var(--font-heading); font-size:0.82rem; font-weight:600; color:var(--text-primary);">{step_name}</div>
+                                <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.15rem;">{s.get('description', '')}</div>
+                                <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:0.25rem;">Execution: {s.get('latency_sec', 0)}s</div>
                             </div>
                             """, unsafe_allow_html=True)
                             
@@ -1611,22 +1250,35 @@ with tab_query:
                                 st.caption("Raw classification token emitted by Gemma 4:")
                                 st.code(s.get("llm_raw_output", s.get("route_chosen", "")), language="text")
 
-    # Chat Input Box
-    st.markdown("""
-    <div class="chat-console-footer-bar">
-        <div class="console-telemetry-pill">
-            <span class="telemetry-live-dot"></span>
-            <span class="telemetry-label">DUAL-RETRIEVAL CONSOLE</span>
-            <span class="telemetry-sub">· Dense ChromaDB + NetworkX Graph</span>
-        </div>
-        <div class="console-shortcuts-pill">
-            <span class="key-hint">↵ Enter</span> to query
-            <span class="key-sep">·</span>
-            <span class="key-hint">⇧ Shift+↵</span> multiline
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    chat_prompt = st.chat_input("Enter your academic inquiry (e.g., 'What is GraphRAG and how do triples connect?')...")
+    # ── Contextual Follow-Up Suggestions for Active Conversation ─────────────
+    if st.session_state.messages and not st.session_state.upload_processing:
+        st.markdown("<div style='height: 0.5rem;'></div>", unsafe_allow_html=True)
+        hdr_col, ref_col = st.columns([0.88, 0.12], vertical_alignment="center")
+        with hdr_col:
+            st.markdown(
+                "<div style='font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); margin-bottom:0.4rem; font-weight:600;'>SUGGESTED TECHNICAL INQUIRIES:</div>",
+                unsafe_allow_html=True,
+            )
+        with ref_col:
+            if st.button("Refresh", key="refresh_sug_active", icon=":material/refresh:", width="stretch", help="Generate fresh follow-up inquiries with LLM"):
+                with st.spinner("Generating follow-up inquiries..."):
+                    fetch_suggested_inquiries(force_refresh=True, allow_llm=True)
+                st.rerun()
+
+        # In active conversation, during page render read cached suggestions without blocking output generation
+        active_suggestions = fetch_suggested_inquiries(allow_llm=False)
+        if active_suggestions:
+            cols = st.columns(len(active_suggestions))
+            for idx, (col, q) in enumerate(zip(cols, active_suggestions)):
+                with col:
+                    if st.button(q, key=f"sug_active_{idx}", width="stretch"):
+                        st.session_state.prompt_seed = q
+                        st.rerun()
+
+    # ── Interactive Chat Input ───────────────────────────────────────────────
+    chat_prompt = st.chat_input(
+        "Enter your academic inquiry (e.g., 'What is GraphRAG and how do triples connect?')..."
+    )
     if st.session_state.prompt_seed:
         chat_prompt = st.session_state.prompt_seed
         st.session_state.prompt_seed = ""
@@ -1642,6 +1294,7 @@ with tab_query:
             stream_complete = False
             stream_error = None
             trace_payload = []
+            
             with st.spinner("Agent routing & retrieving..."):
                 try:
                     t_start = time.time()
@@ -1689,6 +1342,11 @@ with tab_query:
                                 st.session_state.traces[msg_idx] = trace_payload
                                 st.session_state.messages.append({"role": "assistant", "content": answer_text.strip()})
                                 refresh_conversations()
+
+                                # ── OUTPUT GENERATION COMPLETE ──
+                                # Now that output generation has finished, update suggested technical inquiries
+                                with st.spinner("Updating suggested inquiries..."):
+                                    fetch_suggested_inquiries(force_refresh=True, allow_llm=True)
                                 st.rerun()
                             elif stream_error:
                                 st.error(f"Inference error: {stream_error}")
@@ -1707,11 +1365,12 @@ with tab_query:
 #  WORKSPACE 2: KNOWLEDGE GRAPH EXPLORER (INTERACTIVE CANVAS & TRIPLES)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-with tab_graph:
+@st.fragment
+def render_knowledge_graph_tab():
     st.markdown("""
     <div style="margin-bottom: 1rem;">
-        <h3 style="font-size:1.1rem; margin-bottom:0.2rem;">Interactive Knowledge Graph Visualizer</h3>
-        <p style="color:var(--text-secondary); font-size:0.84rem; margin:0;">
+        <h3 style="font-size:1.15rem; margin-bottom:0.2rem;">Interactive Knowledge Graph Visualizer</h3>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin:0;">
             Explore entity concepts, relation topology, and multi-hop triples extracted from academic documents.
         </p>
     </div>
@@ -1722,7 +1381,7 @@ with tab_graph:
     all_edges = graph_data.get("edges", [])
 
     if not all_nodes:
-        st.info("No knowledge graph is available on disk.")
+        st.info("No knowledge graph is available on disk. Use the 'Document Ingestion' tab or sidebar to index documents.")
     else:
         ctrl1, ctrl2, ctrl3 = st.columns([1.5, 1.2, 1])
         with ctrl1:
@@ -1737,19 +1396,16 @@ with tab_graph:
             </div>
             """, unsafe_allow_html=True)
 
-        # Filter edges based on selection
         filtered_edges = all_edges
         if rel_filter != "All Relations":
             filtered_edges = [e for e in all_edges if e.get("relation") == rel_filter]
 
-        # Prepare Graph Data JSON for HTML5 Canvas
         graph_json_str = json.dumps({
             "nodes": [{"id": n["id"], "label": n["label"], "source": n.get("properties", {}).get("source", "")} for n in all_nodes],
             "edges": [{"source": e["source"], "target": e["target"], "relation": e.get("relation", "")} for e in filtered_edges],
             "search": search_query.strip().lower()
         })
 
-        # Self-contained Force-Directed Graph Canvas (Air-Gapped, Zero CDN Dependencies)
         graph_canvas_template = """<!DOCTYPE html>
 <html>
 <head>
@@ -1817,93 +1473,80 @@ with tab_graph:
             }
             for (let i = 0; i < nodes.length; i++) {
                 for (let j = i + 1; j < nodes.length; j++) {
-                    const a = nodes[i];
-                    const b = nodes[j];
-                    let dx = b.x - a.x;
-                    let dy = b.y - a.y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 1) dist = 1;
-                    if (dist < 150) {
-                        const force = (150 - dist) / dist * 0.02;
-                        a.vx -= dx * force;
-                        a.vy -= dy * force;
-                        b.vx += dx * force;
-                        b.vy += dy * force;
+                    const dx = nodes[j].x - nodes[i].x;
+                    const dy = nodes[j].y - nodes[i].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    if (dist < 220) {
+                        const force = (220 - dist) / dist * 0.04;
+                        nodes[i].vx -= dx * force;
+                        nodes[i].vy -= dy * force;
+                        nodes[j].vx += dx * force;
+                        nodes[j].vy += dy * force;
                     }
                 }
             }
 
             data.edges.forEach(e => {
-                const a = nodeMap[e.source];
-                const b = nodeMap[e.target];
-                if (!a || !b) return;
-                let dx = b.x - a.x;
-                let dy = b.y - a.y;
-                let dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                let force = (dist - 80) * 0.002;
-                a.vx += dx * force;
-                a.vy += dy * force;
-                b.vx -= dx * force;
-                b.vy -= dy * force;
+                const s = nodeMap[e.source];
+                const t = nodeMap[e.target];
+                if (s && t) {
+                    const dx = t.x - s.x;
+                    const dy = t.y - s.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const force = (dist - 90) * 0.015;
+                    s.vx += dx / dist * force;
+                    s.vy += dy / dist * force;
+                    t.vx -= dx / dist * force;
+                    t.vy -= dy / dist * force;
+                }
             });
 
             nodes.forEach(n => {
-                n.vx += (width / 2 - n.x) * 0.001;
-                n.vy += (height / 2 - n.y) * 0.001;
-                n.vx = Math.max(-4, Math.min(4, n.vx * 0.85));
-                n.vy = Math.max(-4, Math.min(4, n.vy * 0.85));
                 if (n !== selectedNode) {
                     n.x += n.vx;
                     n.y += n.vy;
-                    n.x = Math.max(30, Math.min(width - 30, n.x));
-                    n.y = Math.max(30, Math.min(height - 30, n.y));
+                    n.vx *= 0.82;
+                    n.vy *= 0.82;
                 }
             });
         }
 
         function render() {
             simulate();
-            ctx.save();
             ctx.clearRect(0, 0, width, height);
-
+            ctx.save();
             ctx.translate(transform.x, transform.y);
             ctx.scale(transform.k, transform.k);
 
             data.edges.forEach(e => {
-                const a = nodeMap[e.source];
-                const b = nodeMap[e.target];
-                if (!a || !b) return;
+                const s = nodeMap[e.source];
+                const t = nodeMap[e.target];
+                if (!s || !t) return;
 
+                const isConnected = selectedNode && (selectedNode.id === s.id || selectedNode.id === t.id);
                 ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(b.x, b.y);
-                
-                const isConnected = selectedNode && (selectedNode === a || selectedNode === b);
-                if (isConnected) {
-                    ctx.strokeStyle = '#38bdf8';
-                    ctx.lineWidth = 2;
-                } else {
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-                    ctx.lineWidth = 1;
-                }
+                ctx.moveTo(s.x, s.y);
+                ctx.lineTo(t.x, t.y);
+                ctx.strokeStyle = isConnected ? '#38bdf8' : 'rgba(148, 163, 184, 0.18)';
+                ctx.lineWidth = isConnected ? 2 : 1;
                 ctx.stroke();
 
-                if (transform.k > 0.8 || isConnected) {
-                    const midX = (a.x + b.x) / 2;
-                    const midY = (a.y + b.y) / 2;
+                if (isConnected || transform.k > 1.2) {
+                    const mx = (s.x + t.x) / 2;
+                    const my = (s.y + t.y) / 2;
                     ctx.fillStyle = isConnected ? '#38bdf8' : '#64748b';
-                    ctx.font = '9px monospace';
+                    ctx.font = '9px sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText(e.relation, midX, midY - 3);
+                    ctx.fillText(e.relation, mx, my - 3);
                 }
             });
 
             nodes.forEach(n => {
-                ctx.beginPath();
-                ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-                
+                const isSelected = selectedNode && selectedNode.id === n.id;
                 const isMatch = data.search && n.label.toLowerCase().includes(data.search);
-                const isSelected = selectedNode === n;
+
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.radius + (isSelected ? 3 : 0), 0, Math.PI * 2);
 
                 if (isSelected) {
                     ctx.fillStyle = '#38bdf8';
@@ -2004,7 +1647,7 @@ with tab_graph:
         graph_canvas_html = graph_canvas_template.replace("__GRAPH_DATA__", graph_json_str)
         components.html(graph_canvas_html, height=560)
 
-        # Bottom Relationship Triples Catalog Table
+        # Relationship Triples Catalog Table
         st.markdown("<h4 style='font-size:0.95rem; margin-top:1.5rem;'>Extracted Knowledge Graph Triples Catalog</h4>", unsafe_allow_html=True)
         node_lookup = {n["id"]: n["label"] for n in all_nodes}
         triples_data = []
@@ -2016,4 +1659,9 @@ with tab_graph:
                 "Predicate (Relation)": e.get("relation", ""),
                 "Object (Target Entity)": t_label,
             })
-        st.dataframe(triples_data, use_container_width=True, hide_index=True)
+        st.dataframe(triples_data, hide_index=True)
+
+with tab_graph:
+    render_knowledge_graph_tab()
+
+

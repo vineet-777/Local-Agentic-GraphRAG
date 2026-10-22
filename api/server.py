@@ -33,7 +33,7 @@ from core.config import (
     EMBEDDING_MODEL,
     ROUTER_MODEL,
 )
-from core.engine import run_query
+from core.engine import run_query, generate_suggested_inquiries
 from core.ingest import extract_text, chunk_documents, embed_chunks, ingest_files
 from core.graph_builder import build_graph_from_chunks
 from api.auth import (
@@ -216,6 +216,17 @@ class QueryResponse(BaseModel):
     response: str
     route: str
     reasoning_trace: list[dict]
+
+
+class SuggestedInquiriesRequest(BaseModel):
+    conversation_id: str | None = None
+    messages: list[dict] | None = None
+    force_refresh: bool = False
+
+
+class SuggestedInquiriesResponse(BaseModel):
+    suggestions: list[str]
+    context_type: str
 
 
 def _sse_event(name: str, data: dict | str) -> str:
@@ -569,6 +580,35 @@ async def query_engine(
         )
 
 
+@app.post(
+    "/api/suggested-inquiries",
+    response_model=SuggestedInquiriesResponse,
+    tags=["Query"],
+)
+async def get_suggested_inquiries(
+    request: SuggestedInquiriesRequest,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Generate dynamic, context-aware technical inquiries via LLM based on
+    the knowledge base or current conversation.
+    """
+    conversation_history = request.messages or []
+    if request.conversation_id and not conversation_history:
+        conversation = get_conversation_with_messages(user["id"], request.conversation_id)
+        if conversation:
+            conversation_history = conversation.get("messages", [])
+
+    result = generate_suggested_inquiries(
+        conversation_history=conversation_history,
+        num_suggestions=3,
+    )
+    return SuggestedInquiriesResponse(
+        suggestions=result.get("suggestions", []),
+        context_type=result.get("context_type", "knowledge_base"),
+    )
+
+
 @app.get("/", tags=["System"])
 async def root():
     """Root info."""
@@ -580,6 +620,7 @@ async def root():
             "upload": "POST /api/upload",
             "upload_status": "GET /api/upload-status",
             "query": "POST /api/query",
+            "suggested_inquiries": "POST /api/suggested-inquiries",
         },
     }
 

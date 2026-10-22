@@ -1,0 +1,83 @@
+# Local-Agentic-GraphRAG — Precision Dark Engineering Studio Theme
+# Deep navy base + electric cyan accent, custom for an air-gapped AI workbench
+# Inspired by financial-dashboard template, tailored for this project's identity
+
+[theme]
+base = "dark"
+primaryColor = "#38bdf8"              # Electric cyan — buttons, links, active elements
+backgroundColor = "#0b0e14"          # Deep navy base
+secondaryBackgroundColor = "#121721" # Elevated surface (cards, widgets, sidebar swap)
+codeBackgroundColor = "#151c29"
+textColor = "#f1f5f9"                # Light slate — body text
+linkColor = "#38bdf8"
+borderColor = "#1e293b"
+codeTextColor = "#94a3b8"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "6px"
+buttonRadius = "6px"
+
+# Typography — engineering studio feel
+font = "'Plus Jakarta Sans':https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+headingFont = "'Plus Jakarta Sans':https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+codeFontSize = "13px"
+headingFontSizes = ["28px", "22px", "18px", "16px", "14px", "12px"]
+headingFontWeights = [700, 700, 600, 600, 500, 500]
+linkUnderline = false
+
+# Semantic colors
+greenColor = "#10b981"      # Graph retrieval / success
+redColor = "#f43f5e"        # Errors / alerts
+yellowColor = "#f59e0b"     # Router / warnings
+orangeColor = "#f97316"     # Secondary warnings
+blueColor = "#38bdf8"       # Vector retrieval / primary accent
+violetColor = "#a78bfa"     # Accent highlights
+grayColor = "#64748b"       # Muted text
+
+# Chart palette — retrieval system colors
+chartCategoricalColors = [
+    "#38bdf8",
+    "#10b981",
+    "#a78bfa",
+    "#f43f5e",
+    "#f59e0b",
+    "#0ea5e9",
+    "#64748b",
+    "#f97316",
+]
+
+# Sequential gradient (cyan-based)
+chartSequentialColors = [
+    "#0c4a6e",
+    "#075985",
+    "#0369a1",
+    "#0284c7",
+    "#0ea5e9",
+    "#38bdf8",
+    "#7dd3fc",
+    "#bae6fd",
+    "#e0f2fe",
+    "#f0f9ff",
+]
+
+# Dataframe styling
+dataframeBorderColor = "#1e293b"
+dataframeHeaderBackgroundColor = "#1a2232"
+dataframeHeaderTextColor = "#f8fafc"
+
+# Content padding
+paddingTop = "1rem"
+paddingBottom = "2rem"
+
+[theme.sidebar]
+backgroundColor = "#080b11"
+secondaryBackgroundColor = "#0f1319"
+codeBackgroundColor = "#0f1319"
+textColor = "#f1f5f9"
+borderColor = "#1e293b"
+primaryColor = "#38bdf8"
+linkColor = "#38bdf8"
+

@@ -3,6 +3,7 @@ Local GraphRAG — LangGraph State Machine Engine
 Routes queries between Vector DB and Knowledge Graph, then generates answers.
 """
 
+import json
 import re
 import threading
 import time
@@ -19,6 +20,8 @@ from core.config import (
     ROUTER_MAX_TOKENS,
     SYNTHESIS_MAX_TOKENS,
     TEMPERATURE,
+    GRAPH_PATH,
+    UPLOADS_DIR,
 )
 from core.retrievers import VectorRetriever, GraphRetriever
 
@@ -309,3 +312,214 @@ def run_query(
     result.pop("on_chunk", None)
     result.pop("cancel_event", None)
     return result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  DYNAMIC TECHNICAL INQUIRY SUGGESTIONS (LLM-POWERED)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def get_knowledge_context_summary() -> dict:
+    """Extract summary of knowledge base: document sources, top concepts, and key relationship triples."""
+    sources = set()
+    top_concepts = []
+    sample_triples = []
+
+    if GRAPH_PATH.exists() and GRAPH_PATH.stat().st_size > 0:
+        try:
+            with open(GRAPH_PATH, "r", encoding="utf-8") as f:
+                gdata = json.load(f)
+                nodes = gdata.get("nodes", [])
+                edges = gdata.get("edges", [])
+
+                for n in nodes:
+                    src = n.get("properties", {}).get("source")
+                    if src:
+                        sources.add(src)
+
+                degree = {}
+                node_map = {}
+                for n in nodes:
+                    nid = n.get("id", "")
+                    node_map[nid] = n.get("label", nid)
+                    degree[nid] = 0
+                for e in edges:
+                    s = e.get("source", "")
+                    t = e.get("target", "")
+                    degree[s] = degree.get(s, 0) + 1
+                    degree[t] = degree.get(t, 0) + 1
+
+                sorted_nodes = sorted(degree.items(), key=lambda x: x[1], reverse=True)
+                top_concepts = [node_map[nid] for nid, _ in sorted_nodes[:12] if nid in node_map]
+
+                for e in edges[:8]:
+                    s_label = node_map.get(e.get("source"), e.get("source"))
+                    t_label = node_map.get(e.get("target"), e.get("target"))
+                    rel = e.get("relation", "relates_to")
+                    if s_label and t_label:
+                        sample_triples.append(f"{s_label} —({rel})→ {t_label}")
+        except Exception:
+            pass
+
+    if UPLOADS_DIR.exists():
+        for p in UPLOADS_DIR.iterdir():
+            if p.suffix.lower() in {".pdf", ".docx", ".doc"}:
+                sources.add(p.name)
+
+    return {
+        "sources": sorted(list(sources)),
+        "top_concepts": top_concepts,
+        "sample_triples": sample_triples,
+    }
+
+
+def _parse_suggested_questions(raw_text: str, num_expected: int = 3) -> list[str]:
+    """Robust parser for LLM-generated questions in JSON array or numbered/bullet format."""
+    cleaned = raw_text.strip()
+    clean_fenced = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.MULTILINE)
+    clean_fenced = re.sub(r"\s*```$", "", clean_fenced, flags=re.MULTILINE).strip()
+    try:
+        data = json.loads(clean_fenced)
+        if isinstance(data, list):
+            items = [str(x).strip() for x in data if str(x).strip()]
+            if len(items) >= num_expected:
+                return items[:num_expected]
+            elif items:
+                return items
+    except Exception:
+        pass
+
+    match = re.search(r"\[\s*\"(?:[^\"\\]|\\.)*\".*?\]", raw_text, re.DOTALL)
+    if match:
+        try:
+            data = json.loads(match.group(0))
+            if isinstance(data, list):
+                items = [str(x).strip() for x in data if str(x).strip()]
+                if len(items) >= num_expected:
+                    return items[:num_expected]
+                elif items:
+                    return items
+        except Exception:
+            pass
+
+    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    extracted = []
+    for line in lines:
+        c = re.sub(r"^[\d\.\-\*\•\)\s]+", "", line).strip().strip('"\'')
+        if len(c) > 8 and (c.endswith("?") or any(c.lower().startswith(w) for w in ["what", "how", "why", "which", "compare", "describe", "explain", "can", "is", "does", "where"])):
+            if not c.endswith("?"):
+                c += "?"
+            extracted.append(c)
+            if len(extracted) == num_expected:
+                return extracted
+
+    return extracted
+
+
+def _build_fallback_questions(sources: list[str], top_concepts: list[str], has_convo: bool) -> list[str]:
+    """Generate dynamic, context-aware fallback questions when LLM is offline or timed out."""
+    c1 = top_concepts[0] if len(top_concepts) > 0 else "Local GraphRAG"
+    c2 = top_concepts[1] if len(top_concepts) > 1 else "vector similarity search"
+    c3 = top_concepts[2] if len(top_concepts) > 2 else "knowledge graph traversal"
+    doc = sources[0] if sources else "the ingested documents"
+
+    if has_convo:
+        return [
+            f"How does {c1} directly interact with {c2} in this architecture?",
+            f"What are the primary performance trade-offs when scaling {c1}?",
+            f"What specific evidence in {doc} supports this conclusion?",
+        ]
+    else:
+        return [
+            f"What are the core technical concepts and methodologies covered in {doc}?",
+            f"How does {c1} connect to {c2} across the knowledge base?",
+            f"What role does {c3} play in system operations and data flow?",
+        ]
+
+
+def generate_suggested_inquiries(
+    conversation_history: list[dict] | None = None,
+    num_suggestions: int = 3,
+) -> dict:
+    """
+    Dynamically generates contextual technical inquiries using the local LLM.
+    Adapts based on whether there is an ongoing conversation or knowledge base context.
+
+    Returns:
+        {"suggestions": list[str], "context_type": str}
+    """
+    context = get_knowledge_context_summary()
+    sources = context.get("sources", [])
+    top_concepts = context.get("top_concepts", [])
+    sample_triples = context.get("sample_triples", [])
+
+    has_convo = bool(conversation_history and len(conversation_history) > 0)
+    context_type = "conversation" if has_convo else "knowledge_base"
+
+    docs_summary = ", ".join(sources) if sources else "System Architectural Documents"
+    concepts_summary = ", ".join(top_concepts[:8]) if top_concepts else "Local GraphRAG Dual-Retrieval, ChromaDB, NetworkX Graph"
+    triples_summary = "\n".join(sample_triples[:6]) if sample_triples else "None"
+
+    if has_convo:
+        recent_msgs = conversation_history[-4:]
+        convo_lines = []
+        for m in recent_msgs:
+            role = m.get("role", "user").capitalize()
+            content = m.get("content", "").strip()
+            if len(content) > 200:
+                content = content[:200] + "..."
+            convo_lines.append(f"{role}: {content}")
+        convo_str = "\n".join(convo_lines)
+
+        user_prompt = (
+            f"Knowledge Base Scope:\n"
+            f"Documents: {docs_summary}\n"
+            f"Core Concepts: {concepts_summary}\n\n"
+            f"Recent Conversation:\n"
+            f"{convo_str}\n\n"
+            f"Generate {num_suggestions} insightful, technically rigorous follow-up questions that probe deeper into these concepts or clarify implications."
+        )
+    else:
+        user_prompt = (
+            f"Knowledge Base Scope:\n"
+            f"Documents: {docs_summary}\n"
+            f"Core Concepts: {concepts_summary}\n"
+            f"Sample Relationships:\n{triples_summary}\n\n"
+            f"Generate {num_suggestions} compelling, technical inquiry questions that a student or researcher would ask to investigate this knowledge base."
+        )
+
+    system_prompt = (
+        f"You are an academic inquiry generator for a GraphRAG system. "
+        f"Generate exactly {num_suggestions} concise, specific, and technically insightful questions based on the provided context. "
+        f"Each question must be a direct single sentence under 18 words ending with '?'. "
+        f"Respond ONLY with a valid JSON array of {num_suggestions} strings. Do NOT output markdown code blocks or extra text.\n"
+        f"Example:\n[\"Question 1?\", \"Question 2?\", \"Question 3?\"]"
+    )
+
+    try:
+        res = client.chat.completions.create(
+            model=SYNTHESISER_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=220,
+            temperature=0.35,
+        )
+        raw_output = res.choices[0].message.content.strip()
+        parsed = _parse_suggested_questions(raw_output, num_expected=num_suggestions)
+        if len(parsed) >= num_suggestions:
+            return {"suggestions": parsed[:num_suggestions], "context_type": context_type}
+        elif parsed:
+            fallbacks = _build_fallback_questions(sources, top_concepts, has_convo)
+            for fb in fallbacks:
+                if fb not in parsed:
+                    parsed.append(fb)
+                if len(parsed) >= num_suggestions:
+                    break
+            return {"suggestions": parsed[:num_suggestions], "context_type": context_type}
+    except Exception as exc:
+        print(f"Warning: Failed to generate suggestions via LLM: {exc}")
+
+    fallback_qs = _build_fallback_questions(sources, top_concepts, has_convo)[:num_suggestions]
+    return {"suggestions": fallback_qs, "context_type": context_type}
+
