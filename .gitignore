@@ -40,7 +40,7 @@ logs/
 .streamlit/secrets.toml
 
 # Local GraphRAG runtime data
-/db/auth.sqlite3*
+/db/auth.sqlite3
 /db/chromadb/
 /db/graph.json
 /data/*
