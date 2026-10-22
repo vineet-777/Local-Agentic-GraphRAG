@@ -8,7 +8,7 @@ additional features for RAG project
 - share conversations
 - chat context 
 - multi modal chat
-
+- standalone chat(every separate chat has its own knowledgebase)
 
 
 #this is srikanth reporting
